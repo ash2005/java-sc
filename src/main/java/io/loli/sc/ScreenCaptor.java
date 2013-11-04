@@ -14,8 +14,7 @@ import javax.imageio.ImageIO;
 
 public class ScreenCaptor {
     public static void main(String[] args) {
-        Config config = new Config();
-        File file = ScreenCaptor.screenShot(config.getSavePath());
+        ScreenCaptor.screenShot(new Config());
     }
 
     /**
@@ -25,7 +24,7 @@ public class ScreenCaptor {
      *            保存图片的路径
      * @return 图片文件
      */
-    public static File screenShot(String savePath) {
+    public static File screenShot(Config config) {
         Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
                 .getScreenSize());
         BufferedImage screenCapture = null;
@@ -37,7 +36,7 @@ public class ScreenCaptor {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyymmddHHmmss");
         String name = sdf.format(new Date());
-        File f = new File(savePath + File.separator + name + ".png");
+        File f = new File(config.getSavePath() + File.separator + name + ".png");
         try {
             // png格式比jpg格式清晰很多
             ImageIO.write(screenCapture, "png", f);
