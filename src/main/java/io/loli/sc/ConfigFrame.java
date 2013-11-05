@@ -1,9 +1,11 @@
 package io.loli.sc;
 
-import java.awt.FlowLayout;
+import io.loli.sc.api.ImgurAPI;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Date;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -41,7 +43,7 @@ public class ConfigFrame extends JFrame {
         // 确保内部类可以调用到此jframe
         this.jframe = this;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(380, 100);
+        setSize(380, 230);
         setVisible(true);
         this.setResizable(false);
 
@@ -52,12 +54,41 @@ public class ConfigFrame extends JFrame {
         savePathField = new JTextField(20);
         browsePathButton = new JButton("浏览");
         jpanel = new JPanel();
-        jpanel.setLayout(new FlowLayout());
+        jpanel.setLayout(null);
 
         okButton = new JButton("确定");
         cancelButton = new JButton("取消");
         chooser = new JFileChooser();
         savePathField.setText(config.getSavePath());
+
+        imgurLabel = new JLabel("imgur");
+        imgurAuthLabel = new JLabel();
+        imgurAuthButton = new JButton("连接");
+        imgurRemoveAuthButton = new JButton("移除");
+    }
+
+    private void initButton() {
+        if (config.getImgurConfig().getAccessToken() == null) {
+            imgurAuthLabel.setText("未连接");
+            imgurRemoveAuthButton.setEnabled(false);
+        } else {
+            imgurAuthLabel.setText("已连接");
+            imgurAuthButton.setEnabled(false);
+        }
+    }
+
+    private void initComposition() {
+        savePathLabel.setBounds(30, 5, 70, 30);
+        savePathField.setBounds(90, 5, 180, 30);
+        browsePathButton.setBounds(280, 5, 60, 30);
+        okButton.setBounds(100, 170, 60, 30);
+        cancelButton.setBounds(200, 170, 60, 30);
+
+        imgurLabel.setBounds(40, 40, 60, 30);
+        imgurAuthLabel.setBounds(85, 40, 60, 30);
+        imgurAuthButton.setBounds(145, 40, 60, 30);
+        imgurRemoveAuthButton.setBounds(210, 40, 60, 30);
+
     }
 
     private JLabel savePathLabel;
@@ -68,6 +99,10 @@ public class ConfigFrame extends JFrame {
     private JButton cancelButton;
 
     private JFileChooser chooser;
+    private JLabel imgurLabel;
+    private JLabel imgurAuthLabel;
+    private JButton imgurAuthButton;
+    private JButton imgurRemoveAuthButton;
 
     private void addcomponents() {
 
@@ -76,6 +111,12 @@ public class ConfigFrame extends JFrame {
         jpanel.add(browsePathButton);
         jpanel.add(okButton);
         jpanel.add(cancelButton);
+
+        jpanel.add(imgurLabel);
+        jpanel.add(imgurAuthLabel);
+        jpanel.add(imgurAuthButton);
+        jpanel.add(imgurRemoveAuthButton);
+
         add(jpanel);
         // add(chooser);
     }
@@ -119,6 +160,42 @@ public class ConfigFrame extends JFrame {
             }
 
         });
+
+        imgurAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ImgurAPI api = new ImgurAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
+                ImgurAPI.AccessToken token = api.pinToToken(pin);
+                config.getImgurConfig().setAccessToken(token.getAccess_token());
+                config.getImgurConfig().setRefreshToken(
+                        token.getRefresh_token());
+                config.getImgurConfig().setDate(new Date());
+                config.getImgurConfig()
+                        .updateProperties(config.getProperties());
+                config.save();
+                imgurAuthButton.setEnabled(false);
+                imgurRemoveAuthButton.setEnabled(true);
+                imgurAuthLabel.setText("已连接");
+            }
+
+        });
+
+        imgurRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getImgurConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                imgurAuthButton.setEnabled(true);
+                imgurRemoveAuthButton.setEnabled(false);
+                imgurAuthLabel.setText("未连接");
+            }
+
+        });
     }
 
     public ConfigFrame(Config config) {
@@ -127,6 +204,8 @@ public class ConfigFrame extends JFrame {
         this.useSystemUI();
         this.init();
         this.initComponents();
+        this.initComposition();
+        this.initButton();
         this.addcomponents();
         this.addListeners();
     }

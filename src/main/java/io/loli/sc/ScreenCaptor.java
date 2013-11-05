@@ -1,9 +1,15 @@
 package io.loli.sc;
 
+import io.loli.sc.api.API;
+import io.loli.sc.api.ImgurAPI;
+
 import java.awt.AWTException;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +20,22 @@ import javax.imageio.ImageIO;
 
 public class ScreenCaptor {
     public static void main(String[] args) {
-        ScreenCaptor.screenShot(new Config());
+        Config config = new Config();
+        API api = new ImgurAPI(config);
+        String result = api.upload(ScreenCaptor.screenShot(config));
+        ScreenCaptor.copyToClipboard(result);
+        System.out.println("------");
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void copyToClipboard(String content){
+        Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
+        Transferable t = new StringSelection(content);
+        cb.setContents(t, null);
     }
 
     /**

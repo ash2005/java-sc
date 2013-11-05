@@ -8,6 +8,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import javax.swing.filechooser.FileSystemView;
@@ -19,6 +21,7 @@ public class Config {
     private File propDir;
     private File propFile;
     private Properties properties;
+    private ImgurConfig imgurConfig;
 
     /**
      * 打开图片保存文件夹
@@ -40,7 +43,7 @@ public class Config {
      * 
      * @return 转换后的properties对象
      */
-    private Properties getProperties() {
+    public Properties getProperties() {
         if (properties == null) {
             properties = new Properties();
         }
@@ -137,6 +140,30 @@ public class Config {
             }
         }
         this.setSavePath(properties.getProperty("savePath"));
+        if (properties.getProperty("imgur.date") != null) {
+            imgurConfig = new ImgurConfig();
+            try {
+                imgurConfig.setDate(new SimpleDateFormat("yyyyMMddHHmmss")
+                        .parse(properties.getProperty("imgur.date")));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            imgurConfig.setRefreshToken(properties
+                    .getProperty("imgur.refreshToken"));
+            imgurConfig.setAccessToken(properties
+                    .getProperty("imgur.accessToken"));
+        }
+    }
+
+    public ImgurConfig getImgurConfig() {
+        if (imgurConfig == null) {
+            imgurConfig = new ImgurConfig();
+        }
+        return imgurConfig;
+    }
+
+    public void setImgurConfig(ImgurConfig imgurConfig) {
+        this.imgurConfig = imgurConfig;
     }
 
 }
