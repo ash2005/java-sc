@@ -1,12 +1,10 @@
 package io.loli.sc;
 
 import java.awt.AWTEvent;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -14,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,7 +26,7 @@ public class DragFrame extends JFrame {
     private JFrame jframe;
     private JPanel imgPanel;
     private JLabel bgLabel;
-
+    private BufferedImage img;
     private DragPanel dragPanel;
 
     private void useSystemUI() {
@@ -68,80 +67,84 @@ public class DragFrame extends JFrame {
         @Override
         public void paint(Graphics g) {
             super.paint(g);
-            g.setColor(Color.red);
-            // 设置线条粗细
-            float thick = 2f;
-            ((Graphics2D) g).setStroke(new BasicStroke(thick,
-                    BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
-
             int w = a2 - a1;
             int h = b2 - b1;
+            BufferedImage subImg = null;
             if (w > 0 && h > 0)
-                g.drawRect(a1, b1, w, h);
-            if (w < 0 && h > 0)
-                g.drawRect(a2, b1, -w, h);
-            if (w > 0 && h < 0)
-                g.drawRect(a1, b2, w, -h);
-            if (w < 0 && h < 0)
-                g.drawRect(a2, b2, -w, -h);
+                subImg = img.getSubimage(a1, b1, w, h);
+            if (w < 0 && h > 0) {
+                subImg = img.getSubimage(a2, b1, -w, h);
+            }
+            if (w > 0 && h < 0) {
+                subImg = img.getSubimage(a1, b2, w, -h);
+            }
+            if (w < 0 && h < 0) {
+                subImg = img.getSubimage(a2, b2, -w, -h);
+            }
+            this.setBorder(BorderFactory.createLineBorder(Color.red));
+            g.drawImage(subImg, 0, 0, null);
         }
+
+        // private ImageInputStream ImageToStream(BufferedImage img) {
+        // img.flush();
+        // InputStream is = null;
+        // ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        //
+        // ImageOutputStream imOut;
+        // try {
+        // imOut = ImageIO.createImageOutputStream(bs);
+        // ImageIO.write(img, "png", imOut);
+        // is = new ByteArrayInputStream(bs.toByteArray());
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
+        // ImageInputStream iis = null;
+        // try {
+        // iis = ImageIO.createImageInputStream(is);
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
+        // return iis;
+        // }
+
+        public void resize() {
+            int w = a2 - a1;
+            int h = b2 - b1;
+
+            if (w > 0 && h > 0)
+                dragPanel.setBounds(a1, b1, w, h);
+            if (w < 0 && h > 0) {
+                dragPanel.setBounds(a2, b1, -w, h);
+            }
+            if (w > 0 && h < 0) {
+                dragPanel.setBounds(a1, b2, w, -h);
+            }
+            if (w < 0 && h < 0) {
+                dragPanel.setBounds(a2, b2, -w, -h);
+            }
+            dragPanel.setVisible(true);
+        }
+
     }
 
     private void addComponents() {
+        addDragPanel();
+        addGreyPanel();
+
+    }
+
+    private void addDragPanel() {
 
         dragPanel = new DragPanel();
-        this.getContentPane().add(dragPanel);
-        dragPanel.setBackground(new Color(0, 0, 0, 40));
+        add(dragPanel);
+        dragPanel.setBackground(new Color(0, 0, 0, 80));
         Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
         dragPanel.setPreferredSize(scrSize);
-        dragPanel.setBounds(0, 0, (int) scrSize.getWidth(),
-                (int) scrSize.getHeight());
-        dragPanel.addMouseMotionListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                a1 = e.getX();
-                b1 = e.getY();
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                a2 = e.getX();
-                b2 = e.getY();
-                jframe.repaint();
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                a2 = e.getX();
-                b2 = e.getY();
-                jframe.repaint();
-            }
-        });
-        dragPanel.addMouseListener(new MouseInputAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                a1 = e.getX();
-                b1 = e.getY();
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                a2 = e.getX();
-                b2 = e.getY();
-                jframe.repaint();
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                a2 = e.getX();
-                b2 = e.getY();
-                jframe.repaint();
-            }
-        });
+        dragPanel.setVisible(false);
     }
 
     private void setBackground() {
-        BufferedImage img = ScreenCaptor.screenShot();
+        img = ScreenCaptor.screenShot();
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         try {
             ImageIO.write(img, "png", byteOut);
@@ -152,6 +155,7 @@ public class DragFrame extends JFrame {
         bgLabel = new JLabel(background);
         bgLabel.setBounds(0, 0, background.getIconWidth(),
                 background.getIconHeight());
+
         // 把内容窗格转化为JPanel，否则不能用方法setOpaque()来使内容窗格透明
         imgPanel = (JPanel) jframe.getContentPane();
         imgPanel.setOpaque(false);
@@ -163,42 +167,82 @@ public class DragFrame extends JFrame {
         getLayeredPane().add(bgLabel, new Integer(Integer.MIN_VALUE));
     }
 
+    public void addGreyPanel() {
+        JPanel greyPanel = new JPanel();
+        this.getContentPane().add(greyPanel);
+        greyPanel.setBackground(new Color(0, 0, 0, 60));
+        Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
+        greyPanel.setPreferredSize(scrSize);
+        greyPanel.setVisible(true);
+        greyPanel.setBounds(0, 0, (int) scrSize.getWidth(),
+                (int) scrSize.getHeight());
+    }
+
     private void init() {
         setVisible(false);
         this.jframe = this;
         setLayout(new FlowLayout());
         this.setBackground();
+        this.addListeners();
+    }
+
+    private void addListeners() {
 
         addMouseMotionListener(new MouseInputAdapter() {
+            boolean dragged = false;
+
             @Override
             public void mousePressed(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                a1 = e.getX();
+                b1 = e.getY();
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                if (!dragged)
+                    dragged = true;
+                a2 = e.getX();
+                b2 = e.getY();
+                dragPanel.resize();
+                jframe.repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                a2 = e.getX();
+                b2 = e.getY();
+                if (dragged)
+                    dragPanel.resize();
+                jframe.repaint();
             }
         });
         addMouseListener(new MouseInputAdapter() {
+            boolean dragged = false;
+
             @Override
             public void mousePressed(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                dragPanel.setVisible(false);
+                a1 = e.getX();
+                b1 = e.getY();
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                if (!dragged)
+                    dragged = true;
+                a2 = e.getX();
+                b2 = e.getY();
+                dragPanel.resize();
+                jframe.repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                dragPanel.processParentEvent(e);
+                a2 = e.getX();
+                b2 = e.getY();
+                if (dragged)
+                    dragPanel.resize();
+                jframe.repaint();
             }
         });
     }
