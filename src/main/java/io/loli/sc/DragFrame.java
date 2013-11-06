@@ -1,10 +1,12 @@
 package io.loli.sc;
 
 import java.awt.AWTEvent;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -67,7 +69,21 @@ public class DragFrame extends JFrame {
         public void paint(Graphics g) {
             super.paint(g);
             g.setColor(Color.red);
-            g.drawRect(a1, b1, a2 - a1, b2 - b1);
+            // 设置线条粗细
+            float thick = 2f;
+            ((Graphics2D) g).setStroke(new BasicStroke(thick,
+                    BasicStroke.CAP_SQUARE, BasicStroke.JOIN_ROUND));
+
+            int w = a2 - a1;
+            int h = b2 - b1;
+            if (w > 0 && h > 0)
+                g.drawRect(a1, b1, w, h);
+            if (w < 0 && h > 0)
+                g.drawRect(a2, b1, -w, h);
+            if (w > 0 && h < 0)
+                g.drawRect(a1, b2, w, -h);
+            if (w < 0 && h < 0)
+                g.drawRect(a2, b2, -w, -h);
         }
     }
 
@@ -78,19 +94,19 @@ public class DragFrame extends JFrame {
         dragPanel.setBackground(new Color(0, 0, 0, 40));
         Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
         dragPanel.setPreferredSize(scrSize);
+        dragPanel.setBounds(0, 0, (int) scrSize.getWidth(),
+                (int) scrSize.getHeight());
         dragPanel.addMouseMotionListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 a1 = e.getX();
                 b1 = e.getY();
-                System.out.println("pressed");
             }
 
             @Override
             public void mouseDragged(MouseEvent e) {
                 a2 = e.getX();
                 b2 = e.getY();
-                System.out.println("dragged");
                 jframe.repaint();
             }
 
@@ -98,7 +114,6 @@ public class DragFrame extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 a2 = e.getX();
                 b2 = e.getY();
-                System.out.println("released");
                 jframe.repaint();
             }
         });
@@ -107,7 +122,6 @@ public class DragFrame extends JFrame {
             public void mousePressed(MouseEvent e) {
                 a1 = e.getX();
                 b1 = e.getY();
-                System.out.println("pressed");
             }
 
             @Override
@@ -121,7 +135,6 @@ public class DragFrame extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 a2 = e.getX();
                 b2 = e.getY();
-                System.out.println("released");
                 jframe.repaint();
             }
         });
@@ -143,7 +156,7 @@ public class DragFrame extends JFrame {
         imgPanel = (JPanel) jframe.getContentPane();
         imgPanel.setOpaque(false);
         // 内容窗格默认的布局管理器为BorderLayout
-        imgPanel.setLayout(new FlowLayout());
+        imgPanel.setLayout(null);
 
         getLayeredPane().setLayout(null);
         // 把背景图片添加到分层窗格的最底层作为背景
