@@ -74,12 +74,10 @@ public class DragFrame extends JFrame {
     private void addComponents() {
 
         dragPanel = new DragPanel();
-        add(dragPanel);
+        this.getContentPane().add(dragPanel);
         dragPanel.setBackground(new Color(0, 0, 0, 40));
         Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
         dragPanel.setPreferredSize(scrSize);
-        // dragPanel.setBounds(0, 0, (int) scrSize.getWidth(),
-        // (int) scrSize.getHeight());
         dragPanel.addMouseMotionListener(new MouseInputAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -149,7 +147,7 @@ public class DragFrame extends JFrame {
 
         getLayeredPane().setLayout(null);
         // 把背景图片添加到分层窗格的最底层作为背景
-        getLayeredPane().add(bgLabel, Integer.MIN_VALUE);
+        getLayeredPane().add(bgLabel, new Integer(Integer.MIN_VALUE));
     }
 
     private void init() {
