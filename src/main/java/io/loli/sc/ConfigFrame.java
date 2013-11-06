@@ -1,5 +1,6 @@
 package io.loli.sc;
 
+import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.event.ActionEvent;
@@ -8,6 +9,7 @@ import java.io.File;
 import java.util.Date;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -43,10 +45,17 @@ public class ConfigFrame extends JFrame {
         // 确保内部类可以调用到此jframe
         this.jframe = this;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(380, 230);
+        setSize(380, 300);
         setVisible(true);
         this.setResizable(false);
 
+    }
+
+    private void addChoice(JComboBox<String> choice) {
+        if (config.getImgurConfig().getAccessToken() != null)
+            choice.addItem("imgur");
+        if (config.getDropboxConfig().getAccessToken() != null)
+            choice.addItem("dropbox");
     }
 
     private void initComponents() {
@@ -55,6 +64,10 @@ public class ConfigFrame extends JFrame {
         browsePathButton = new JButton("浏览");
         jpanel = new JPanel();
         jpanel.setLayout(null);
+
+        uploadChoice = new JComboBox<String>();
+        addChoice(uploadChoice);
+        uploadChoice.setSelectedItem(config.getDefaultUpload());
 
         okButton = new JButton("确定");
         cancelButton = new JButton("取消");
@@ -65,6 +78,13 @@ public class ConfigFrame extends JFrame {
         imgurAuthLabel = new JLabel();
         imgurAuthButton = new JButton("连接");
         imgurRemoveAuthButton = new JButton("移除");
+
+        dropboxLabel = new JLabel("dropbox");
+        dropboxAuthLabel = new JLabel();
+        dropboxAuthButton = new JButton("连接");
+        dropboxRemoveAuthButton = new JButton("移除");
+
+        uploadToLabel = new JLabel("上传到");
     }
 
     private void initButton() {
@@ -75,20 +95,34 @@ public class ConfigFrame extends JFrame {
             imgurAuthLabel.setText("已连接");
             imgurAuthButton.setEnabled(false);
         }
+        if (config.getDropboxConfig().getAccessToken() == null) {
+            dropboxAuthLabel.setText("未连接");
+            dropboxRemoveAuthButton.setEnabled(false);
+        } else {
+            dropboxAuthLabel.setText("已连接");
+            dropboxAuthButton.setEnabled(false);
+        }
+
     }
 
     private void initComposition() {
-        savePathLabel.setBounds(30, 5, 70, 30);
-        savePathField.setBounds(90, 5, 180, 30);
-        browsePathButton.setBounds(280, 5, 60, 30);
-        okButton.setBounds(100, 170, 60, 30);
-        cancelButton.setBounds(200, 170, 60, 30);
+        savePathLabel.setBounds(30, 40, 70, 30);
+        savePathField.setBounds(90, 40, 180, 30);
+        browsePathButton.setBounds(280, 40, 60, 30);
+        okButton.setBounds(100, 205, 60, 30);
+        cancelButton.setBounds(200, 205, 60, 30);
+        uploadChoice.setBounds(90, 5, 140, 30);
+        uploadToLabel.setBounds(30, 5, 60, 30);
 
-        imgurLabel.setBounds(40, 40, 60, 30);
-        imgurAuthLabel.setBounds(85, 40, 60, 30);
-        imgurAuthButton.setBounds(145, 40, 60, 30);
-        imgurRemoveAuthButton.setBounds(210, 40, 60, 30);
+        imgurLabel.setBounds(40, 75, 60, 30);
+        imgurAuthLabel.setBounds(85, 75, 60, 30);
+        imgurAuthButton.setBounds(185, 75, 60, 30);
+        imgurRemoveAuthButton.setBounds(250, 75, 60, 30);
 
+        dropboxLabel.setBounds(40, 110, 60, 30);
+        dropboxAuthLabel.setBounds(110, 110, 60, 30);
+        dropboxAuthButton.setBounds(185, 110, 60, 30);
+        dropboxRemoveAuthButton.setBounds(250, 110, 60, 30);
     }
 
     private JLabel savePathLabel;
@@ -104,6 +138,15 @@ public class ConfigFrame extends JFrame {
     private JButton imgurAuthButton;
     private JButton imgurRemoveAuthButton;
 
+    private JLabel dropboxLabel;
+    private JLabel dropboxAuthLabel;
+    private JButton dropboxAuthButton;
+    private JButton dropboxRemoveAuthButton;
+
+    private JComboBox<String> uploadChoice;
+
+    private JLabel uploadToLabel;
+
     private void addcomponents() {
 
         jpanel.add(savePathLabel);
@@ -117,6 +160,12 @@ public class ConfigFrame extends JFrame {
         jpanel.add(imgurAuthButton);
         jpanel.add(imgurRemoveAuthButton);
 
+        jpanel.add(dropboxLabel);
+        jpanel.add(dropboxAuthLabel);
+        jpanel.add(dropboxAuthButton);
+        jpanel.add(dropboxRemoveAuthButton);
+        jpanel.add(uploadChoice);
+        jpanel.add(uploadToLabel);
         add(jpanel);
         // add(chooser);
     }
@@ -153,8 +202,10 @@ public class ConfigFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                String savePath = savePathField.getText();
-                config.setSavePath(savePath);
+                config.setSavePath(savePathField.getText());
+                Object obj = uploadChoice.getSelectedItem();
+                if (obj != null)
+                    config.setDefaultUpload((String) obj);
                 config.save();
                 jframe.dispose();
             }
@@ -179,6 +230,7 @@ public class ConfigFrame extends JFrame {
                 imgurAuthButton.setEnabled(false);
                 imgurRemoveAuthButton.setEnabled(true);
                 imgurAuthLabel.setText("已连接");
+                uploadChoice.addItem("imgur");
             }
 
         });
@@ -193,9 +245,57 @@ public class ConfigFrame extends JFrame {
                 imgurAuthButton.setEnabled(true);
                 imgurRemoveAuthButton.setEnabled(false);
                 imgurAuthLabel.setText("未连接");
+                uploadChoice.removeItem("imgur");
+                removeAllItemsIfHasOnlyOne(uploadChoice);
             }
 
         });
+
+        dropboxAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DropboxAPI api = new DropboxAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入认证码");
+                DropboxAPI.AccessToken token = api.pinToToken(pin);
+                config.getDropboxConfig().setAccessToken(
+                        token.getAccess_token());
+
+                config.getDropboxConfig().setUid(token.getUid());
+                ;
+                config.getDropboxConfig().updateProperties(
+                        config.getProperties());
+                config.save();
+                dropboxAuthButton.setEnabled(false);
+                dropboxRemoveAuthButton.setEnabled(true);
+                dropboxAuthLabel.setText("已连接");
+                uploadChoice.addItem("dropbox");
+            }
+
+        });
+
+        dropboxRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getDropboxConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                dropboxAuthButton.setEnabled(true);
+                dropboxRemoveAuthButton.setEnabled(false);
+                dropboxAuthLabel.setText("未连接");
+                uploadChoice.removeItem("dropbox");
+                removeAllItemsIfHasOnlyOne(uploadChoice);
+            }
+
+        });
+    }
+
+    private void removeAllItemsIfHasOnlyOne(JComboBox<String> choice) {
+        if (choice.getItemCount() == 1) {
+            choice.removeAllItems();
+        }
     }
 
     public ConfigFrame(Config config) {

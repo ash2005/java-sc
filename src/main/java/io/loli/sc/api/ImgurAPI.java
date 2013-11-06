@@ -17,7 +17,6 @@ import javax.swing.JOptionPane;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -30,7 +29,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-public class ImgurAPI implements API {
+public class ImgurAPI extends APITools implements API {
     private static final String CLIENT_ID = "497cc6f6f81c581";
     private static final String CLIENT_SECRET = "4946a4382470ccee887599bc5bc506df3267f881";
     private static final String AUTH_URL_PIN = "https://api.imgur.com/oauth2/authorize?client_id="
@@ -142,26 +141,6 @@ public class ImgurAPI implements API {
             multiPartEntityBuilder.addBinaryBody("image", imgFileToUpload);
 
             hp.setEntity(multiPartEntityBuilder.build());
-            response = httpclient.execute(hp);
-            result = EntityUtils.toString(response.getEntity());
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-    /**
-     * 发出post请求
-     */
-    private String post(String postUrl, List<NameValuePair> params) {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpPost hp = new HttpPost(postUrl);
-        CloseableHttpResponse response = null;
-        String result = null;
-        try {
-            hp.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
             response = httpclient.execute(hp);
             result = EntityUtils.toString(response.getEntity());
         } catch (ClientProtocolException e) {

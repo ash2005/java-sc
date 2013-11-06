@@ -1,6 +1,7 @@
 package io.loli.sc;
 
 import io.loli.sc.api.API;
+import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.AWTException;
@@ -19,20 +20,34 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 
 public class ScreenCaptor {
-    public static void main(String[] args) {
-        Config config = new Config();
-        API api = new ImgurAPI(config);
-        String result = api.upload(ScreenCaptor.screenShot(config));
-        ScreenCaptor.copyToClipboard(result);
-        System.out.println("------");
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    private Config config;
+    private String apiStr;
+    private String link;
+
+    private ScreenCaptor(String apiStr) {
+        this.apiStr = apiStr;
+        this.config = new Config();
+        File scf = this.screenShot(config);
+        API api = this.getAPI();
+        link = api.upload(scf);
+        this.copyToClipboard(link);
     }
-    
-    public static void copyToClipboard(String content){
+
+    public static ScreenCaptor newInstance(String apiStr) {
+        return new ScreenCaptor(apiStr);
+    }
+
+    private API getAPI() {
+        API api = null;
+        if (apiStr.equals("imgur")) {
+            api = new ImgurAPI(config);
+        } else if (apiStr.equals("dropbox")) {
+            api = new DropboxAPI(config);
+        }
+        return api;
+    }
+
+    private void copyToClipboard(String content) {
         Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable t = new StringSelection(content);
         cb.setContents(t, null);
@@ -45,7 +60,7 @@ public class ScreenCaptor {
      *            保存图片的路径
      * @return 图片文件
      */
-    public static File screenShot(Config config) {
+    private File screenShot(Config config) {
         Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
                 .getScreenSize());
         BufferedImage screenCapture = null;
@@ -65,5 +80,21 @@ public class ScreenCaptor {
             e.printStackTrace();
         }
         return f;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    
+    public static void main(String[] args) {
+        ScreenCaptor.newInstance("imgur");
+        System.out.println("------");
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }

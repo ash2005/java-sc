@@ -22,6 +22,7 @@ public class Config {
     private File propFile;
     private Properties properties;
     private ImgurConfig imgurConfig;
+    private DropboxConfig dropboxConfig;
 
     /**
      * 打开图片保存文件夹
@@ -48,6 +49,7 @@ public class Config {
             properties = new Properties();
         }
         properties.setProperty("savePath", getSavePath());
+        properties.setProperty("defaultUpload", getDefaultUpload());
         return properties;
     }
 
@@ -77,6 +79,8 @@ public class Config {
     }
 
     private String savePath;
+
+    private String defaultUpload;
 
     /**
      * 获取保存路径
@@ -140,6 +144,8 @@ public class Config {
             }
         }
         this.setSavePath(properties.getProperty("savePath"));
+        this.setDefaultUpload(properties.getProperty("defaultUpload"));
+        // imgurConfig
         if (properties.getProperty("imgur.date") != null) {
             imgurConfig = new ImgurConfig();
             try {
@@ -153,6 +159,12 @@ public class Config {
             imgurConfig.setAccessToken(properties
                     .getProperty("imgur.accessToken"));
         }
+        if (properties.getProperty("dropbox.uid") != null) {
+            dropboxConfig = new DropboxConfig();
+            dropboxConfig.setAccessToken(properties
+                    .getProperty("dropbox.accessToken"));
+            dropboxConfig.setUid(properties.getProperty("dropbox.uid"));
+        }
     }
 
     public ImgurConfig getImgurConfig() {
@@ -164,6 +176,28 @@ public class Config {
 
     public void setImgurConfig(ImgurConfig imgurConfig) {
         this.imgurConfig = imgurConfig;
+    }
+
+    public DropboxConfig getDropboxConfig() {
+        if (dropboxConfig == null) {
+            dropboxConfig = new DropboxConfig();
+        }
+        return dropboxConfig;
+    }
+
+    public void setDropboxConfig(DropboxConfig dropboxConfig) {
+        this.dropboxConfig = dropboxConfig;
+    }
+
+    public String getDefaultUpload() {
+        if (defaultUpload == null) {
+            defaultUpload = "";
+        }
+        return defaultUpload;
+    }
+
+    public void setDefaultUpload(String defaultUpload) {
+        this.defaultUpload = defaultUpload;
     }
 
 }
