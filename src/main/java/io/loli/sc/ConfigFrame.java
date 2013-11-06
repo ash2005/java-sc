@@ -48,7 +48,6 @@ public class ConfigFrame extends JFrame {
         setSize(380, 300);
         setVisible(true);
         this.setResizable(false);
-
     }
 
     private void addChoice(JComboBox<String> choice) {
@@ -297,6 +296,10 @@ public class ConfigFrame extends JFrame {
             choice.removeAllItems();
         }
     }
+
+    /**
+     * 
+     */
 
     public ConfigFrame(Config config) {
         super("设置");

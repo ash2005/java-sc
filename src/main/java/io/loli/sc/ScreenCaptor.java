@@ -61,14 +61,8 @@ public class ScreenCaptor {
      * @return 图片文件
      */
     private File screenShot(Config config) {
-        Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
-                .getScreenSize());
-        BufferedImage screenCapture = null;
-        try {
-            screenCapture = new Robot().createScreenCapture(screen);
-        } catch (AWTException e1) {
-            e1.printStackTrace();
-        }
+
+        BufferedImage screenCapture = screenShot();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyymmddHHmmss");
         String name = sdf.format(new Date());
@@ -82,11 +76,22 @@ public class ScreenCaptor {
         return f;
     }
 
+    public static BufferedImage screenShot() {
+        Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
+                .getScreenSize());
+        BufferedImage screenCapture = null;
+        try {
+            screenCapture = new Robot().createScreenCapture(screen);
+        } catch (AWTException e1) {
+            e1.printStackTrace();
+        }
+        return screenCapture;
+    }
+
     public String getLink() {
         return link;
     }
 
-    
     public static void main(String[] args) {
         ScreenCaptor.newInstance("imgur");
         System.out.println("------");
