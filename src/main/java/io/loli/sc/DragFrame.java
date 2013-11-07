@@ -65,31 +65,36 @@ public class DragFrame extends JFrame {
         public void move(int x, int y) {
             int xx = getX();
             int yy = getY();
-            if (xx < 0)
+            if (xx + x < 0) {
                 xx = 0;
-            if (xx > (int) scrSize.getWidth() - getWidth())
-                xx = (int) scrSize.getWidth() - getWidth();
-            if (yy < 0)
-                yy = 0;
-            if (yy > (int) scrSize.getHeight() - getHeight())
-                yy = (int) scrSize.getHeight() - getHeight();
-
-            if ((xx == 0 && x < 0)
-                    || (xx == (int) scrSize.getWidth() - getWidth() && x > 0))
                 x = 0;
-            if ((yy == 0 && y < 0)
-                    || (yy == (int) scrSize.getHeight() - getHeight() && y > 0))
+            }
+            if (yy + y < 0) {
+                yy = 0;
                 y = 0;
-            setBounds(xx + x, yy + y, getWidth(), getHeight());
+            }
+            if (xx + x > (int) scrSize.getWidth() - getWidth()) {
+                xx = (int) scrSize.getWidth() - getWidth();
+                x = 0;
+            }
+            if (yy + y > (int) scrSize.getHeight() - getHeight()) {
+                yy = (int) scrSize.getHeight() - getHeight();
+                y = 0;
+            }
+
+            xx += x;
+            yy += y;
+
+            setBounds(xx, yy, getWidth(), getHeight());
         }
 
         @Override
         public void paint(Graphics g) {
             super.paint(g);
-            int a = this.getX();
-            int b = this.getY();
-            int w = this.getWidth();
-            int h = this.getHeight();
+            int a = getX();
+            int b = getY();
+            int w = getWidth();
+            int h = getHeight();
             subImg = img.getSubimage(a, b, w, h);
             g.drawImage(subImg, 0, 0, null);
         }
@@ -177,27 +182,37 @@ public class DragFrame extends JFrame {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            a1 = e.getX();
-            b1 = e.getY();
+            if (!e.isMetaDown()) {
+                a1 = e.getX();
+                b1 = e.getY();
+            }
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (!dragged)
-                dragged = true;
-            a2 = e.getX();
-            b2 = e.getY();
-            dragPanel.resize();
-            jframe.repaint();
+            if (!e.isMetaDown()) {
+
+                if (!dragged)
+                    dragged = true;
+                a2 = e.getX();
+                b2 = e.getY();
+                dragPanel.resize();
+                jframe.repaint();
+            }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            a2 = e.getX();
-            b2 = e.getY();
-            if (dragged)
-                dragPanel.resize();
-            jframe.repaint();
+            if (!e.isMetaDown()) {
+
+                a2 = e.getX();
+                b2 = e.getY();
+                if (dragged)
+                    dragPanel.resize();
+                jframe.repaint();
+            } else {
+                jframe.dispose();
+            }
         }
     }
 
@@ -206,41 +221,53 @@ public class DragFrame extends JFrame {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getClickCount() == 2) {
-                jframe.dispose();
-                ScreenCaptor sc = ScreenCaptor.newInstance();
-                sc.setConfig(config);
-                String result = sc.uploadImage(config.getDefaultUpload(),
-                        subImg);
-                ScreenCaptor.copyToClipboard(result);
+            if (!e.isMetaDown()) {
+
+                if (e.getClickCount() == 2) {
+                    jframe.dispose();
+                    ScreenCaptor sc = ScreenCaptor.newInstance();
+                    sc.setConfig(config);
+                    String result = sc.uploadImage(config.getDefaultUpload(),
+                            subImg);
+                    ScreenCaptor.copyToClipboard(result);
+                }
             }
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-            m1 = e.getX();
-            n1 = e.getY();
+            if (!e.isMetaDown()) {
+
+                m1 = e.getX();
+                n1 = e.getY();
+            }
         }
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            m2 = e.getX();
-            n2 = e.getY();
-            if (!dragged)
-                dragged = true;
-            if (dragged)
-                dragPanel.move(m2 - m1, n2 - n1);
-            jframe.repaint();
+            if (!e.isMetaDown()) {
+
+                m2 = e.getX();
+                n2 = e.getY();
+                if (!dragged)
+                    dragged = true;
+                if (dragged)
+                    dragPanel.move(m2 - m1, n2 - n1);
+                jframe.repaint();
+            }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            m2 = e.getX();
-            n2 = e.getY();
-            if (dragged)
-                dragPanel.move(m2 - m1, n2 - n1);
-            jframe.repaint();
-
+            if (!e.isMetaDown()) {
+                m2 = e.getX();
+                n2 = e.getY();
+                if (dragged)
+                    dragPanel.move(m2 - m1, n2 - n1);
+                jframe.repaint();
+            } else {
+                jframe.dispose();
+            }
         }
 
     }
