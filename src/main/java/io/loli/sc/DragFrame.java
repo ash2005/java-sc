@@ -28,6 +28,7 @@ public class DragFrame extends JFrame {
     private BufferedImage img;
     private DragPanel dragPanel;
     private Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
+    BufferedImage subImg = null;
 
     private void useSystemUI() {
         try {
@@ -73,7 +74,6 @@ public class DragFrame extends JFrame {
             if (yy > (int) scrSize.getHeight() - getHeight())
                 yy = (int) scrSize.getHeight() - getHeight();
 
-            System.out.println(xx + " " + yy);
             if ((xx == 0 && x < 0)
                     || (xx == (int) scrSize.getWidth() - getWidth() && x > 0))
                 x = 0;
@@ -90,7 +90,6 @@ public class DragFrame extends JFrame {
             int b = this.getY();
             int w = this.getWidth();
             int h = this.getHeight();
-            BufferedImage subImg = null;
             subImg = img.getSubimage(a, b, w, h);
             g.drawImage(subImg, 0, 0, null);
         }
@@ -206,6 +205,18 @@ public class DragFrame extends JFrame {
         boolean dragged = false;
 
         @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                jframe.dispose();
+                ScreenCaptor sc = ScreenCaptor.newInstance();
+                sc.setConfig(config);
+                String result = sc.uploadImage(config.getDefaultUpload(),
+                        subImg);
+                ScreenCaptor.copyToClipboard(result);
+            }
+        }
+
+        @Override
         public void mousePressed(MouseEvent e) {
             m1 = e.getX();
             n1 = e.getY();
@@ -234,7 +245,10 @@ public class DragFrame extends JFrame {
 
     }
 
-    public DragFrame() {
+    private Config config;
+
+    public DragFrame(Config config) {
+        this.config = config;
         this.useSystemUI();
         this.init();
         this.addComponents();
@@ -243,6 +257,6 @@ public class DragFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        new DragFrame();
+        new DragFrame(new Config());
     }
 }

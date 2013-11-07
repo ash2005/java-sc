@@ -21,20 +21,26 @@ import javax.imageio.ImageIO;
 
 public class ScreenCaptor {
     private Config config;
-    private String apiStr;
     private String link;
+    private String apiStr;
 
     private ScreenCaptor(String apiStr) {
-        this.apiStr = apiStr;
         this.config = new Config();
+        this.apiStr = apiStr;
         File scf = this.screenShot(config);
-        API api = this.getAPI();
-        link = api.upload(scf);
-        this.copyToClipboard(link);
+        link = this.uploadFile(scf);
+        copyToClipboard(link);
+    }
+
+    private ScreenCaptor() {
     }
 
     public static ScreenCaptor newInstance(String apiStr) {
         return new ScreenCaptor(apiStr);
+    }
+
+    public static ScreenCaptor newInstance() {
+        return new ScreenCaptor();
     }
 
     private API getAPI() {
@@ -47,7 +53,7 @@ public class ScreenCaptor {
         return api;
     }
 
-    private void copyToClipboard(String content) {
+    public static void copyToClipboard(String content) {
         Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable t = new StringSelection(content);
         cb.setContents(t, null);
@@ -64,16 +70,30 @@ public class ScreenCaptor {
 
         BufferedImage screenCapture = screenShot();
 
+        File imgFile = saveImageToFile(screenCapture);
+        return imgFile;
+    }
+
+    private File saveImageToFile(BufferedImage img) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyymmddHHmmss");
         String name = sdf.format(new Date());
         File f = new File(config.getSavePath() + File.separator + name + ".png");
         try {
             // png格式比jpg格式清晰很多
-            ImageIO.write(screenCapture, "png", f);
+            ImageIO.write(img, "png", f);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return f;
+    }
+
+    private String uploadFile(File file) {
+        return this.getAPI().upload(file);
+    }
+
+    public String uploadImage(String apiStr, BufferedImage image) {
+        this.apiStr = apiStr;
+        return uploadFile(saveImageToFile(image));
     }
 
     public static BufferedImage screenShot() {
@@ -101,5 +121,9 @@ public class ScreenCaptor {
             e.printStackTrace();
         }
 
+    }
+
+    public void setConfig(Config config) {
+        this.config = config;
     }
 }
