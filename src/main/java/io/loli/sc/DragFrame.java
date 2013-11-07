@@ -6,6 +6,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Toolkit;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -57,6 +59,13 @@ public class DragFrame extends JFrame {
 
     class DragPanel extends JPanel {
         private static final long serialVersionUID = 1L;
+
+        public DragPanel() {
+            super();
+            setBackground(new Color(0, 0, 0, 80));
+            setPreferredSize(scrSize);
+            setVisible(false);
+        }
 
         public void processParentEvent(AWTEvent e) {
             this.processEvent(e);
@@ -115,9 +124,7 @@ public class DragFrame extends JFrame {
 
         dragPanel = new DragPanel();
         add(dragPanel);
-        dragPanel.setBackground(new Color(0, 0, 0, 80));
-        dragPanel.setPreferredSize(scrSize);
-        dragPanel.setVisible(false);
+
     }
 
     private void setBackground() {
@@ -174,7 +181,31 @@ public class DragFrame extends JFrame {
 
         dragPanel.addMouseListener(new DragListener());
         dragPanel.addMouseMotionListener(new DragListener());
+        jframe.addKeyListener(new CostumKeyListener());
 
+    }
+
+    class CostumKeyListener extends KeyAdapter {
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                if (dragPanel.isVisible()) {
+                    dragPanel.setVisible(false);
+                } else {
+                    jframe.remove(dragPanel);
+                    jframe.dispose();
+                }
+            }
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                ScreenCaptor sc = ScreenCaptor.newInstance();
+                sc.setConfig(config);
+                jframe.remove(dragPanel);
+                jframe.dispose();
+                ScreenCaptor.copyToClipboard(sc.uploadImage(
+                        config.getDefaultUpload(), img));
+
+            }
+        }
     }
 
     class DrawListener extends MouseInputAdapter {
@@ -191,7 +222,6 @@ public class DragFrame extends JFrame {
         @Override
         public void mouseDragged(MouseEvent e) {
             if (!e.isMetaDown()) {
-
                 if (!dragged)
                     dragged = true;
                 a2 = e.getX();
@@ -204,7 +234,6 @@ public class DragFrame extends JFrame {
         @Override
         public void mouseReleased(MouseEvent e) {
             if (!e.isMetaDown()) {
-
                 a2 = e.getX();
                 b2 = e.getY();
                 if (dragged)
