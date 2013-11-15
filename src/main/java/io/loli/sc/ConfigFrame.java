@@ -1,6 +1,7 @@
 package io.loli.sc;
 
 import io.loli.sc.api.DropboxAPI;
+import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.event.ActionEvent;
@@ -83,6 +84,11 @@ public class ConfigFrame extends JFrame {
         dropboxAuthButton = new JButton("连接");
         dropboxRemoveAuthButton = new JButton("移除");
 
+        gDriveLabel = new JLabel("gdrive");
+        gDriveAuthLabel = new JLabel();
+        gDriveAuthButton = new JButton("连接");
+        gDriveRemoveAuthButton = new JButton("移除");
+
         uploadToLabel = new JLabel("上传到");
     }
 
@@ -100,6 +106,13 @@ public class ConfigFrame extends JFrame {
         } else {
             dropboxAuthLabel.setText("已连接");
             dropboxAuthButton.setEnabled(false);
+        }
+        if (config.getGdriveConfig().getAccessToken() == null) {
+            gDriveAuthLabel.setText("未连接");
+            gDriveRemoveAuthButton.setEnabled(false);
+        } else {
+            gDriveAuthLabel.setText("已连接");
+            gDriveAuthButton.setEnabled(false);
         }
 
     }
@@ -122,6 +135,11 @@ public class ConfigFrame extends JFrame {
         dropboxAuthLabel.setBounds(110, 110, 60, 30);
         dropboxAuthButton.setBounds(185, 110, 60, 30);
         dropboxRemoveAuthButton.setBounds(250, 110, 60, 30);
+
+        gDriveLabel.setBounds(40, 145, 60, 30);
+        gDriveAuthLabel.setBounds(110, 145, 60, 30);
+        gDriveAuthButton.setBounds(185, 145, 60, 30);
+        gDriveRemoveAuthButton.setBounds(250, 145, 60, 30);
     }
 
     private JLabel savePathLabel;
@@ -141,6 +159,11 @@ public class ConfigFrame extends JFrame {
     private JLabel dropboxAuthLabel;
     private JButton dropboxAuthButton;
     private JButton dropboxRemoveAuthButton;
+
+    private JLabel gDriveLabel;
+    private JLabel gDriveAuthLabel;
+    private JButton gDriveAuthButton;
+    private JButton gDriveRemoveAuthButton;
 
     private JComboBox<String> uploadChoice;
 
@@ -163,6 +186,12 @@ public class ConfigFrame extends JFrame {
         jpanel.add(dropboxAuthLabel);
         jpanel.add(dropboxAuthButton);
         jpanel.add(dropboxRemoveAuthButton);
+
+        jpanel.add(gDriveLabel);
+        jpanel.add(gDriveAuthLabel);
+        jpanel.add(gDriveAuthButton);
+        jpanel.add(gDriveRemoveAuthButton);
+
         jpanel.add(uploadChoice);
         jpanel.add(uploadToLabel);
         add(jpanel);
@@ -262,7 +291,6 @@ public class ConfigFrame extends JFrame {
                         token.getAccess_token());
 
                 config.getDropboxConfig().setUid(token.getUid());
-                ;
                 config.getDropboxConfig().updateProperties(
                         config.getProperties());
                 config.save();
@@ -289,6 +317,21 @@ public class ConfigFrame extends JFrame {
             }
 
         });
+        gDriveAuthButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GDriveAPI api = new GDriveAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入code");
+                GDriveAPI.AccessToken token = api.pinToToken(pin);
+                config.getGdriveConfig().setAccessToken(token.getAccess_token());
+                config.getGdriveConfig().setRefreshToken(token.getRefresh_token());
+                config.getGdriveConfig().updateProperties(config.getProperties());
+                config.save();
+                gDriveLabel.setText("已连接");
+                //TODO
+            }
+        });
     }
 
     private void removeAllItemsIfHasOnlyOne(JComboBox<String> choice) {
@@ -297,9 +340,6 @@ public class ConfigFrame extends JFrame {
         }
     }
 
-    /**
-     * 
-     */
 
     public ConfigFrame(Config config) {
         super("设置");

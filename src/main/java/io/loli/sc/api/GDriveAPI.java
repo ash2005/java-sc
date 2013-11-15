@@ -1,8 +1,11 @@
 package io.loli.sc.api;
 
-import io.loli.sc.api.ImgurAPI.AccessToken;
+import io.loli.sc.Config;
+import io.loli.sc.ScreenCaptor;
+import io.loli.sc.api.GDriveAuth.CodeExchangeException;
 
 import java.awt.Desktop;
+import java.awt.HeadlessException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -10,6 +13,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.swing.JOptionPane;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -23,6 +28,8 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import com.google.api.client.auth.oauth2.Credential;
 
 public class GDriveAPI extends APITools implements API {
 
@@ -38,11 +45,20 @@ public class GDriveAPI extends APITools implements API {
             + "&scope=https://www.googleapis.com/auth/drive.file%20https://www.googleapis.com/auth/userinfo.email%20https://www.googleapis.com/auth/userinfo.profile&approval_prompt=auto";
 
     private static final String PIN_TO_TOKEN_URL = "https://accounts.google.com/o/oauth2/token";
-
+    
     @Override
     public String upload(File fileToUpload) {
-        // TODO Auto-generated method stub
-        return null;
+        com.google.api.services.drive.model.File f = null;
+        try {
+            f = GDriveUpload.uploadFile(fileToUpload,
+                    null);
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        f.setShared(true);
+        return f.getDownloadUrl();
     }
 
     private String code;
@@ -59,20 +75,32 @@ public class GDriveAPI extends APITools implements API {
         }
     }
 
-    private AccessToken pinToToken(String pin) {
+    public AccessToken pinToToken(String pin) {
+        Credential c = null;
+        try {
+            c = GDriveAuth.exchangeCode(pin);
+        } catch (CodeExchangeException e) {
+            e.printStackTrace();
+        }
+        AccessToken token = new AccessToken();
+        token.setAccess_token(c.getAccessToken());
+        token.setExpires_in(c.getExpiresInSeconds());
+        token.setRefresh_token(c.getRefreshToken());
+        return token;
+    }
+
+    public NewAccessToken refreshToken(String refreshToken) {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.addAll(Arrays.asList(new NameValuePair[] {
+                new BasicNameValuePair("refresh_token", refreshToken),
                 new BasicNameValuePair("client_id", CLIENT_ID),
                 new BasicNameValuePair("client_secret", CLIENT_SECRET),
-                new BasicNameValuePair("grant_type", "authorization_code"),
-                new BasicNameValuePair("redirect_uri",
-                        "urn:ietf:wg:oauth:2.0:oob"),
-                new BasicNameValuePair("code", pin) }));
-        String result = post(PIN_TO_TOKEN_URL, params);
+                new BasicNameValuePair("grant_type", "refresh_token") }));
         ObjectMapper mapper = new ObjectMapper();
-        AccessToken token = null;
+        NewAccessToken token = null;
         try {
-            token = mapper.readValue(result, AccessToken.class);
+            token = mapper.readValue(post(PIN_TO_TOKEN_URL, params),
+                    NewAccessToken.class);
         } catch (JsonParseException e) {
             e.printStackTrace();
         } catch (JsonMappingException e) {
@@ -114,52 +142,33 @@ public class GDriveAPI extends APITools implements API {
         return result;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws HeadlessException,
+            CodeExchangeException, IOException {
         GDriveAPI g = new GDriveAPI();
-        // g.auth();
-        System.out
-                .println(g
-                        .pinToToken("4/oVBqDg7tip5LTFab_4diflW2DGqG.YrahaPEEcPQbXE-sT2ZLcbQJndiuhAI"));
+        g.auth();
+        ScreenCaptor sc = ScreenCaptor.newInstance();
+        sc.setConfig(new Config());
+        com.google.api.services.drive.model.File f = GDriveUpload.uploadFile(
+                sc.screenShotSave(),
+                GDriveAuth.exchangeCode(JOptionPane.showInputDialog("")));
+        System.out.println(f.getDownloadUrl());
     }
 
-    @SuppressWarnings("unused")
-    private static class AccessToken {
+    public static class AccessToken {
         private String access_token;
-        private String token_type;
-        private int expires_in;
-        private String id_token;
+        private long expires_in;
         private String refresh_token;
 
         public String getAccess_token() {
             return access_token;
         }
 
-        public void setAccess_token(String access_token) {
-            this.access_token = access_token;
-        }
-
-        public String getToken_type() {
-            return token_type;
-        }
-
-        public void setToken_type(String token_type) {
-            this.token_type = token_type;
-        }
-
-        public int getExpires_in() {
-            return expires_in;
-        }
-
-        public void setExpires_in(int expires_in) {
+        public void setExpires_in(long expires_in) {
             this.expires_in = expires_in;
         }
 
-        public String getId_token() {
-            return id_token;
-        }
-
-        public void setId_token(String id_token) {
-            this.id_token = id_token;
+        public void setAccess_token(String access_token) {
+            this.access_token = access_token;
         }
 
         public String getRefresh_token() {
@@ -169,5 +178,40 @@ public class GDriveAPI extends APITools implements API {
         public void setRefresh_token(String refresh_token) {
             this.refresh_token = refresh_token;
         }
+
+        public long getExpires_in() {
+            return expires_in;
+        }
+    }
+
+    public static class NewAccessToken {
+        private String Access_token;
+        private int Expires_in;
+        private String Token_type;
+
+        public String getAccess_token() {
+            return Access_token;
+        }
+
+        public void setAccess_token(String access_token) {
+            Access_token = access_token;
+        }
+
+        public int getExpires_in() {
+            return Expires_in;
+        }
+
+        public void setExpires_in(int expires_in) {
+            Expires_in = expires_in;
+        }
+
+        public String getToken_type() {
+            return Token_type;
+        }
+
+        public void setToken_type(String token_type) {
+            Token_type = token_type;
+        }
+
     }
 }

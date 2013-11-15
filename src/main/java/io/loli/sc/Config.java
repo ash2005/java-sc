@@ -23,6 +23,7 @@ public class Config {
     private Properties properties;
     private ImgurConfig imgurConfig;
     private DropboxConfig dropboxConfig;
+    private GDriveConfig gdriveConfig;
 
     /**
      * 打开图片保存文件夹
@@ -165,6 +166,13 @@ public class Config {
                     .getProperty("dropbox.accessToken"));
             dropboxConfig.setUid(properties.getProperty("dropbox.uid"));
         }
+        if (properties.getProperty("gdrive.accessToken") != null) {
+            gdriveConfig = new GDriveConfig();
+            gdriveConfig.setAccessToken(properties
+                    .getProperty("gdrive.accessToken"));
+            gdriveConfig.setRefreshToken(properties
+                    .getProperty("gdrive.refreshToken"));
+        }
     }
 
     public ImgurConfig getImgurConfig() {
@@ -198,6 +206,17 @@ public class Config {
 
     public void setDefaultUpload(String defaultUpload) {
         this.defaultUpload = defaultUpload;
+    }
+
+    public GDriveConfig getGdriveConfig() {
+        if (gdriveConfig == null) {
+            gdriveConfig = new GDriveConfig();
+        }
+        return gdriveConfig;
+    }
+
+    public void setGdriveConfig(GDriveConfig gdriveConfig) {
+        this.gdriveConfig = gdriveConfig;
     }
 
 }

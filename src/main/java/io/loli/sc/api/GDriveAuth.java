@@ -1,13 +1,13 @@
 package io.loli.sc.api;
 
-import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.swing.JOptionPane;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -20,14 +20,13 @@ import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfo;
 
-public class MyClass {
+public class GDriveAuth {
 
     // Path to client_secrets.json which should contain a JSON document such as:
     private static String s = "{\"web\": {\"client_id\": \"843116795212.apps.googleusercontent.com\",\"client_secret\": \"7dtggnvbXOVsV0GV0N3FieXp\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://accounts.google.com/o/oauth2/token\"}}";
 
-    private static final String CLIENTSECRETS_LOCATION = "client_secrets.json";
 
-    private static final String REDIRECT_URI = "http://localhost/";
+    private static final String REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
     private static final List<String> SCOPES = Arrays.asList(
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/userinfo.email",
@@ -287,7 +286,8 @@ public class MyClass {
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException, CodeExchangeException {
-        String s = new String(MyClass.exchangeCode("4/kg98Cs4awGNpyM9IzP4ZOtetk18w.smm0HZSxHlgbXE-sT2ZLcbSL0W2uhAI").getAccessToken().getBytes());
-        System.out.println(s);
+        GDriveAPI g = new GDriveAPI();
+        g.auth();
+        GDriveAuth.exchangeCode(JOptionPane.showInputDialog(""));
     }
 }
