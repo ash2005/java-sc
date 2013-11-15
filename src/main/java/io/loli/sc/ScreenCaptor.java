@@ -27,7 +27,7 @@ public class ScreenCaptor {
     private ScreenCaptor(String apiStr) {
         this.config = new Config();
         this.apiStr = apiStr;
-        File scf = this.screenShot(config);
+        File scf = this.screenShotSave();
         link = this.uploadFile(scf);
         copyToClipboard(link);
     }
@@ -66,7 +66,7 @@ public class ScreenCaptor {
      *            保存图片的路径
      * @return 图片文件
      */
-    private File screenShot(Config config) {
+    public File screenShotSave() {
 
         BufferedImage screenCapture = screenShot();
 

@@ -1,8 +1,11 @@
 package io.loli.sc.api;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,19 +20,12 @@ import com.google.api.client.json.jackson.JacksonFactory;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfo;
 
-// ...
-
-public class Test {
+public class MyClass {
 
     // Path to client_secrets.json which should contain a JSON document such as:
-    // {
-    // "web": {
-    // "client_id": "[[YOUR_CLIENT_ID]]",
-    // "client_secret": "[[YOUR_CLIENT_SECRET]]",
-    // "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    // "token_uri": "https://accounts.google.com/o/oauth2/token"
-    // }
-    // }
+    private static String s = "{\"web\": {\"client_id\": \"843116795212.apps.googleusercontent.com\",\"client_secret\": \"7dtggnvbXOVsV0GV0N3FieXp\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://accounts.google.com/o/oauth2/token\"}}";
+
+    private static final String CLIENTSECRETS_LOCATION = "client_secrets.json";
 
     private static final String REDIRECT_URI = "http://localhost/";
     private static final List<String> SCOPES = Arrays.asList(
@@ -152,7 +148,6 @@ public class Test {
         if (flow == null) {
             HttpTransport httpTransport = new NetHttpTransport();
             JacksonFactory jsonFactory = new JacksonFactory();
-            String s = "{\"web\": {\"client_id\": \"843116795212.apps.googleusercontent.com\",\"client_secret\": \"7dtggnvbXOVsV0GV0N3FieXp\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://accounts.google.com/o/oauth2/token\"}}";
             GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
                     jsonFactory, new BufferedReader(new StringReader(s)));
             flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport,
@@ -161,10 +156,6 @@ public class Test {
                     .build();
         }
         return flow;
-    }
-
-    public static void main(String[] args) throws IOException, CodeExchangeException {
-        exchangeCode("4/txxuuwdBVCYktuJtaDsb0lvg1HUY.ojNBk1afv4gcXE-sT2ZLcbS9HOZlhAI").getAccessToken();
     }
 
     /**
@@ -295,4 +286,8 @@ public class Test {
         throw new NoRefreshTokenException(authorizationUrl);
     }
 
+    public static void main(String[] args) throws IOException, URISyntaxException, CodeExchangeException {
+        String s = new String(MyClass.exchangeCode("4/kg98Cs4awGNpyM9IzP4ZOtetk18w.smm0HZSxHlgbXE-sT2ZLcbSL0W2uhAI").getAccessToken().getBytes());
+        System.out.println(s);
+    }
 }
