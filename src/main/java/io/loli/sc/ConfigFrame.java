@@ -56,6 +56,8 @@ public class ConfigFrame extends JFrame {
             choice.addItem("imgur");
         if (config.getDropboxConfig().getAccessToken() != null)
             choice.addItem("dropbox");
+        if (config.getGdriveConfig().getAccessToken() != null)
+            choice.addItem("gdrive");
     }
 
     private void initComponents() {
@@ -274,7 +276,6 @@ public class ConfigFrame extends JFrame {
                 imgurRemoveAuthButton.setEnabled(false);
                 imgurAuthLabel.setText("未连接");
                 uploadChoice.removeItem("imgur");
-                removeAllItemsIfHasOnlyOne(uploadChoice);
             }
 
         });
@@ -313,7 +314,6 @@ public class ConfigFrame extends JFrame {
                 dropboxRemoveAuthButton.setEnabled(false);
                 dropboxAuthLabel.setText("未连接");
                 uploadChoice.removeItem("dropbox");
-                removeAllItemsIfHasOnlyOne(uploadChoice);
             }
 
         });
@@ -324,22 +324,33 @@ public class ConfigFrame extends JFrame {
                 api.auth();
                 String pin = JOptionPane.showInputDialog("请输入code");
                 GDriveAPI.AccessToken token = api.pinToToken(pin);
-                config.getGdriveConfig().setAccessToken(token.getAccess_token());
-                config.getGdriveConfig().setRefreshToken(token.getRefresh_token());
-                config.getGdriveConfig().updateProperties(config.getProperties());
+                config.getGdriveConfig()
+                        .setAccessToken(token.getAccess_token());
+                config.getGdriveConfig().setRefreshToken(
+                        token.getRefresh_token());
+                config.getGdriveConfig().updateProperties(
+                        config.getProperties());
                 config.save();
-                gDriveLabel.setText("已连接");
-                //TODO
+                gDriveAuthLabel.setText("已连接");
+                uploadChoice.addItem("gdrive");
+                gDriveAuthButton.setEnabled(false);
+                gDriveRemoveAuthButton.setEnabled(true);
+            }
+        });
+        gDriveRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getGdriveConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                gDriveAuthButton.setEnabled(true);
+                gDriveRemoveAuthButton.setEnabled(false);
+                gDriveAuthLabel.setText("未连接");
+                uploadChoice.removeItem("gdrive");
             }
         });
     }
-
-    private void removeAllItemsIfHasOnlyOne(JComboBox<String> choice) {
-        if (choice.getItemCount() == 1) {
-            choice.removeAllItems();
-        }
-    }
-
 
     public ConfigFrame(Config config) {
         super("设置");

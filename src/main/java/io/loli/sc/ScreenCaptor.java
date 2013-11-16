@@ -2,6 +2,7 @@ package io.loli.sc;
 
 import io.loli.sc.api.API;
 import io.loli.sc.api.DropboxAPI;
+import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.AWTException;
@@ -49,6 +50,8 @@ public class ScreenCaptor {
             api = new ImgurAPI(config);
         } else if (apiStr.equals("dropbox")) {
             api = new DropboxAPI(config);
+        } else if (apiStr.equals("gdrive")) {
+            api = new GDriveAPI(config);
         }
         return api;
     }
@@ -113,14 +116,15 @@ public class ScreenCaptor {
     }
 
     public static void main(String[] args) {
-        ScreenCaptor.newInstance("imgur");
+        ScreenCaptor sc = ScreenCaptor.newInstance("gdrive");
+
         System.out.println("------");
+        ScreenCaptor.copyToClipboard(sc.getLink());
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
     public void setConfig(Config config) {

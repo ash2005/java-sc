@@ -2,34 +2,41 @@ package io.loli.sc.api;
 
 import io.loli.sc.Config;
 import io.loli.sc.ScreenCaptor;
-import io.loli.sc.api.GDriveAuth.CodeExchangeException;
+import io.loli.sc.api.GDriveAPI.GDriveAuth.CodeExchangeException;
 
 import java.awt.Desktop;
 import java.awt.HeadlessException;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.client.googleapis.media.MediaHttpUploader;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.Drive.Files;
+import com.google.api.services.drive.model.FileList;
+import com.google.api.services.drive.model.ParentReference;
+import com.google.api.services.drive.model.Permission;
+import com.google.api.services.oauth2.Oauth2;
+import com.google.api.services.oauth2.model.Userinfo;
 
 public class GDriveAPI extends APITools implements API {
 
@@ -44,21 +51,39 @@ public class GDriveAPI extends APITools implements API {
             + REDIRECT_URL
             + "&scope=https://www.googleapis.com/auth/drive.file%20https://www.googleapis.com/auth/userinfo.email%20https://www.googleapis.com/auth/userinfo.profile&approval_prompt=auto";
 
-    private static final String PIN_TO_TOKEN_URL = "https://accounts.google.com/o/oauth2/token";
-    
+    private Config config;
+
     @Override
     public String upload(File fileToUpload) {
         com.google.api.services.drive.model.File f = null;
         try {
-            f = GDriveUpload.uploadFile(fileToUpload,
-                    null);
+            Credential cre = GDriveUpload.tokenToCre(config.getGdriveConfig()
+                    .getAccessToken(), config.getGdriveConfig()
+                    .getRefreshToken());
+            cre.refreshToken();
+            Drive drive = GDriveUpload.getDrive(cre);
+            String parent_id = GDriveUpload.getFolderId(drive);
+            if (parent_id == null) {
+                parent_id = GDriveUpload.createFolder("sc-java", cre);
+            }
+            f = GDriveUpload.uploadFile(fileToUpload, cre, parent_id);
+            GDriveUpload.insertPermission(drive, f.getId(), "", "anyone",
+                    "reader");
         } catch (HeadlessException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        f.setShared(true);
-        return f.getDownloadUrl();
+        f.setWebViewLink(f.getWebContentLink().substring(0,
+                f.getWebContentLink().indexOf("&")));
+        return f.getWebViewLink();
+    }
+
+    public GDriveAPI() {
+    }
+
+    public GDriveAPI(Config config) {
+        this.config = config;
     }
 
     private String code;
@@ -79,7 +104,7 @@ public class GDriveAPI extends APITools implements API {
         Credential c = null;
         try {
             c = GDriveAuth.exchangeCode(pin);
-        } catch (CodeExchangeException e) {
+        } catch (io.loli.sc.api.GDriveAPI.GDriveAuth.CodeExchangeException e) {
             e.printStackTrace();
         }
         AccessToken token = new AccessToken();
@@ -89,69 +114,17 @@ public class GDriveAPI extends APITools implements API {
         return token;
     }
 
-    public NewAccessToken refreshToken(String refreshToken) {
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.addAll(Arrays.asList(new NameValuePair[] {
-                new BasicNameValuePair("refresh_token", refreshToken),
-                new BasicNameValuePair("client_id", CLIENT_ID),
-                new BasicNameValuePair("client_secret", CLIENT_SECRET),
-                new BasicNameValuePair("grant_type", "refresh_token") }));
-        ObjectMapper mapper = new ObjectMapper();
-        NewAccessToken token = null;
-        try {
-            token = mapper.readValue(post(PIN_TO_TOKEN_URL, params),
-                    NewAccessToken.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return token;
-    }
-
     public String getCode() {
         return code;
     }
 
-    /**
-     * post上传文件
-     */
-    private String postFile(String postUrl, File imgFileToUpload,
-            String accessToken) {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpPost hp = new HttpPost(postUrl);
-        hp.addHeader("Authorization", "Bearer " + accessToken);
-        hp.addHeader("Content-Type", "image/png");
-        CloseableHttpResponse response = null;
-        String result = null;
-        try {
-            MultipartEntityBuilder multiPartEntityBuilder = MultipartEntityBuilder
-                    .create();
-            multiPartEntityBuilder.addBinaryBody("image", imgFileToUpload);
-
-            hp.setEntity(multiPartEntityBuilder.build());
-            response = httpclient.execute(hp);
-            result = EntityUtils.toString(response.getEntity());
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
     public static void main(String[] args) throws HeadlessException,
             CodeExchangeException, IOException {
-        GDriveAPI g = new GDriveAPI();
-        g.auth();
+        Config c = new Config();
+        GDriveAPI g = new GDriveAPI(c);
         ScreenCaptor sc = ScreenCaptor.newInstance();
-        sc.setConfig(new Config());
-        com.google.api.services.drive.model.File f = GDriveUpload.uploadFile(
-                sc.screenShotSave(),
-                GDriveAuth.exchangeCode(JOptionPane.showInputDialog("")));
-        System.out.println(f.getDownloadUrl());
+        sc.setConfig(c);
+        g.upload(sc.screenShotSave());
     }
 
     public static class AccessToken {
@@ -211,6 +184,424 @@ public class GDriveAPI extends APITools implements API {
 
         public void setToken_type(String token_type) {
             Token_type = token_type;
+        }
+
+    }
+
+    static class GDriveUpload {
+
+        private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+
+        private static final JsonFactory JSON_FACTORY = new JacksonFactory();
+        private static Drive drive = null;
+
+        public static Drive getDrive(Credential credential) {
+            drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+                    .setApplicationName("Google-DriveSample/1.0").build();
+            return drive;
+        }
+
+        /**
+         * Insert a new permission.
+         * 
+         * @param service
+         *            Drive API service instance.
+         * @param fileId
+         *            ID of the file to insert permission for.
+         * @param value
+         *            User or group e-mail address, domain name or {@code null}
+         *            "default" type.
+         * @param type
+         *            The value "user", "group", "domain" or "default".
+         * @param role
+         *            The value "owner", "writer" or "reader".
+         * @return The inserted permission if successful, {@code null}
+         *         otherwise.
+         */
+        public static Permission insertPermission(Drive service, String fileId,
+                String value, String type, String role) {
+            Permission newPermission = new Permission();
+
+            newPermission.setValue(value);
+            newPermission.setType(type);
+            newPermission.setRole(role);
+            try {
+                return service.permissions().insert(fileId, newPermission)
+                        .execute();
+            } catch (IOException e) {
+                System.out.println("An error occurred: " + e);
+            }
+            return null;
+        }
+
+        public static com.google.api.services.drive.model.File uploadFile(
+                java.io.File file, Credential credential, String parent)
+                throws IOException {
+            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
+            fileMetadata.setParents(Arrays.asList(new ParentReference()
+                    .setId(parent)));
+            fileMetadata.setTitle(file.getName());
+            InputStreamContent mediaContent = new InputStreamContent(
+                    "image/png", new BufferedInputStream(new FileInputStream(
+                            file)));
+            mediaContent.setLength(file.length());
+
+            Drive.Files.Insert insert = drive.files().insert(fileMetadata,
+                    mediaContent);
+            MediaHttpUploader uploader = insert.getMediaHttpUploader();
+            uploader.setDirectUploadEnabled(true);
+            return insert.execute();
+        }
+
+        public static Credential tokenToCre(String accessToken,
+                String refreshToken) {
+            GoogleCredential credential = new GoogleCredential.Builder()
+                    .setJsonFactory(JSON_FACTORY).setTransport(HTTP_TRANSPORT)
+                    .setClientSecrets(CLIENT_ID, CLIENT_SECRET).build()
+                    .setAccessToken(accessToken).setRefreshToken(refreshToken);
+            return credential;
+        }
+
+        public static String createFolder(String name, Credential credential) {
+            com.google.api.services.drive.model.File body = new com.google.api.services.drive.model.File();
+            body.setTitle(name);
+            body.setMimeType("application/vnd.google-apps.folder");
+            Drive drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY,
+                    credential).setApplicationName("Google-DriveSample/1.0")
+                    .build();
+
+            com.google.api.services.drive.model.File result = null;
+            try {
+                result = drive.files().insert(body).execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result.getId();
+        }
+
+        public static String getFolderId(Drive service) throws IOException {
+            List<com.google.api.services.drive.model.File> result = new ArrayList<com.google.api.services.drive.model.File>();
+            Files.List request = service.files().list();
+            String parent_id = null;
+            do {
+                try {
+                    FileList files = request.execute();
+
+                    result.addAll(files.getItems());
+                    request.setPageToken(files.getNextPageToken());
+                } catch (IOException e) {
+                    System.out.println("An error occurred: " + e);
+                    request.setPageToken(null);
+                }
+            } while (request.getPageToken() != null
+                    && request.getPageToken().length() > 0);
+            for (com.google.api.services.drive.model.File file : result) {
+                if (file.getTitle().equals("sc-java")
+                        && !file.getLabels().getTrashed()) {
+                    parent_id = file.getId();
+                    break;
+                }
+            }
+            return parent_id;
+        }
+
+        public static Credential refreshToken(Credential cre) {
+            try {
+                cre.refreshToken();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return cre;
+        }
+    }
+
+    static class GDriveAuth {
+
+        private static String s = "{\"web\": {\"client_id\": \"843116795212.apps.googleusercontent.com\",\"client_secret\": \"7dtggnvbXOVsV0GV0N3FieXp\",\"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",\"token_uri\": \"https://accounts.google.com/o/oauth2/token\"}}";
+
+        private static final String REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
+        private static final List<String> SCOPES = Arrays.asList(
+                "https://www.googleapis.com/auth/drive.file",
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile");
+
+        private static GoogleAuthorizationCodeFlow flow = null;
+
+        /**
+         * Exception thrown when an error occurred while retrieving credentials.
+         */
+        public static class GetCredentialsException extends Exception {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+            protected String authorizationUrl;
+
+            /**
+             * Construct a GetCredentialsException.
+             * 
+             * @param authorizationUrl
+             *            The authorization URL to redirect the user to.
+             */
+            public GetCredentialsException(String authorizationUrl) {
+                this.authorizationUrl = authorizationUrl;
+            }
+
+            /**
+             * Set the authorization URL.
+             */
+            public void setAuthorizationUrl(String authorizationUrl) {
+                this.authorizationUrl = authorizationUrl;
+            }
+
+            /**
+             * @return the authorizationUrl
+             */
+            public String getAuthorizationUrl() {
+                return authorizationUrl;
+            }
+        }
+
+        /**
+         * Exception thrown when a code exchange has failed.
+         */
+        public static class CodeExchangeException extends
+                GetCredentialsException {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Construct a CodeExchangeException.
+             * 
+             * @param authorizationUrl
+             *            The authorization URL to redirect the user to.
+             */
+            public CodeExchangeException(String authorizationUrl) {
+                super(authorizationUrl);
+            }
+
+        }
+
+        /**
+         * Exception thrown when no refresh token has been found.
+         */
+        public static class NoRefreshTokenException extends
+                GetCredentialsException {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+
+            /**
+             * Construct a NoRefreshTokenException.
+             * 
+             * @param authorizationUrl
+             *            The authorization URL to redirect the user to.
+             */
+            public NoRefreshTokenException(String authorizationUrl) {
+                super(authorizationUrl);
+            }
+
+        }
+
+        /**
+         * Exception thrown when no user ID could be retrieved.
+         */
+        private static class NoUserIdException extends Exception {
+
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 1L;
+        }
+
+        /**
+         * Retrieved stored credentials for the provided user ID.
+         * 
+         * @param userId
+         *            User's ID.
+         * @return Stored Credential if found, {@code null} otherwise.
+         */
+        static Credential getStoredCredentials(String userId) {
+            // TODO: Implement this method to work with your database.
+            // Instantiate a
+            // new
+            // Credential instance with stored accessToken and refreshToken.
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Store OAuth 2.0 credentials in the application's database.
+         * 
+         * @param userId
+         *            User's ID.
+         * @param credentials
+         *            The OAuth 2.0 credentials to store.
+         */
+        static void storeCredentials(String userId, Credential credentials) {
+            // TODO: Implement this method to work with your database.
+            // Store the credentials.getAccessToken() and
+            // credentials.getRefreshToken()
+            // string values in your database.
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * Build an authorization flow and store it as a static class attribute.
+         * 
+         * @return GoogleAuthorizationCodeFlow instance.
+         * @throws IOException
+         *             Unable to load client_secrets.json.
+         */
+        static GoogleAuthorizationCodeFlow getFlow() throws IOException {
+            if (flow == null) {
+                HttpTransport httpTransport = new NetHttpTransport();
+                JacksonFactory jsonFactory = new JacksonFactory();
+                GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
+                        jsonFactory, new BufferedReader(new StringReader(s)));
+                flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport,
+                        jsonFactory, clientSecrets, SCOPES)
+                        .setAccessType("offline").setApprovalPrompt("force")
+                        .build();
+            }
+            return flow;
+        }
+
+        /**
+         * Exchange an authorization code for OAuth 2.0 credentials.
+         * 
+         * @param authorizationCode
+         *            Authorization code to exchange for OAuth 2.0 credentials.
+         * @return OAuth 2.0 credentials.
+         * @throws CodeExchangeException
+         *             An error occurred.
+         */
+        static Credential exchangeCode(String authorizationCode)
+                throws CodeExchangeException {
+            try {
+                GoogleAuthorizationCodeFlow flow = getFlow();
+                GoogleTokenResponse response = flow
+                        .newTokenRequest(authorizationCode)
+                        .setRedirectUri(REDIRECT_URI).execute();
+                return flow.createAndStoreCredential(response, null);
+            } catch (IOException e) {
+                System.err.println("An error occurred: " + e);
+                throw new CodeExchangeException(null);
+            }
+        }
+
+        /**
+         * Send a request to the UserInfo API to retrieve the user's
+         * information.
+         * 
+         * @param credentials
+         *            OAuth 2.0 credentials to authorize the request.
+         * @return User's information.
+         * @throws NoUserIdException
+         *             An error occurred.
+         */
+        static Userinfo getUserInfo(Credential credentials)
+                throws NoUserIdException {
+            Oauth2 userInfoService = new Oauth2.Builder(new NetHttpTransport(),
+                    new JacksonFactory(), credentials).build();
+            Userinfo userInfo = null;
+            try {
+                userInfo = userInfoService.userinfo().get().execute();
+            } catch (IOException e) {
+                System.err.println("An error occurred: " + e);
+            }
+            if (userInfo != null && userInfo.getId() != null) {
+                return userInfo;
+            } else {
+                throw new NoUserIdException();
+            }
+        }
+
+        /**
+         * Retrieve the authorization URL.
+         * 
+         * @param emailAddress
+         *            User's e-mail address.
+         * @param state
+         *            State for the authorization URL.
+         * @return Authorization URL to redirect the user to.
+         * @throws IOException
+         *             Unable to load client_secrets.json.
+         */
+        public static String getAuthorizationUrl(String emailAddress,
+                String state) throws IOException {
+            GoogleAuthorizationCodeRequestUrl urlBuilder = getFlow()
+                    .newAuthorizationUrl().setRedirectUri(REDIRECT_URI)
+                    .setState(state);
+            urlBuilder.set("user_id", emailAddress);
+            return urlBuilder.build();
+        }
+
+        /**
+         * Retrieve credentials using the provided authorization code.
+         * 
+         * This function exchanges the authorization code for an access token
+         * and queries the UserInfo API to retrieve the user's e-mail address.
+         * If a refresh token has been retrieved along with an access token, it
+         * is stored in the application database using the user's e-mail address
+         * as key. If no refresh token has been retrieved, the function checks
+         * in the application database for one and returns it if found or throws
+         * a NoRefreshTokenException with the authorization URL to redirect the
+         * user to.
+         * 
+         * @param authorizationCode
+         *            Authorization code to use to retrieve an access token.
+         * @param state
+         *            State to set to the authorization URL in case of error.
+         * @return OAuth 2.0 credentials instance containing an access and
+         *         refresh token.
+         * @throws NoRefreshTokenException
+         *             No refresh token could be retrieved from the available
+         *             sources.
+         * @throws IOException
+         *             Unable to load client_secrets.json.
+         */
+        public static Credential getCredentials(String authorizationCode,
+                String state) throws CodeExchangeException,
+                NoRefreshTokenException, IOException {
+            String emailAddress = "";
+            try {
+                Credential credentials = exchangeCode(authorizationCode);
+                Userinfo userInfo = getUserInfo(credentials);
+                String userId = userInfo.getId();
+                emailAddress = userInfo.getEmail();
+                if (credentials.getRefreshToken() != null) {
+                    storeCredentials(userId, credentials);
+                    return credentials;
+                } else {
+                    credentials = getStoredCredentials(userId);
+                    if (credentials != null
+                            && credentials.getRefreshToken() != null) {
+                        return credentials;
+                    }
+                }
+            } catch (CodeExchangeException e) {
+                e.printStackTrace();
+                // Drive apps should try to retrieve the user and credentials
+                // for
+                // the current
+                // session.
+                // If none is available, redirect the user to the authorization
+                // URL.
+                e.setAuthorizationUrl(getAuthorizationUrl(emailAddress, state));
+                throw e;
+            } catch (NoUserIdException e) {
+                e.printStackTrace();
+            }
+            // No refresh token has been retrieved.
+            String authorizationUrl = getAuthorizationUrl(emailAddress, state);
+            throw new NoRefreshTokenException(authorizationUrl);
         }
 
     }
