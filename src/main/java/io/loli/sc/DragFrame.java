@@ -12,6 +12,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -30,7 +32,8 @@ public class DragFrame extends JFrame {
     private BufferedImage img;
     private DragPanel dragPanel;
     private Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
-    BufferedImage subImg = null;
+    private BufferedImage subImg = null;
+    private volatile String result;
 
     private void useSystemUI() {
         try {
@@ -197,14 +200,19 @@ public class DragFrame extends JFrame {
                 }
             }
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                ScreenCaptor sc = ScreenCaptor.newInstance();
-                sc.setConfig(config);
-                jframe.remove(dragPanel);
+                new Thread(new UploadRun()).start();
                 jframe.dispose();
-                ScreenCaptor.copyToClipboard(sc.uploadImage(
-                        config.getDefaultUpload(), img));
-
             }
+        }
+    }
+
+    class UploadRun implements Runnable {
+        @Override
+        public void run() {
+            ScreenCaptor sc = ScreenCaptor.newInstance();
+            Config config = new Config();
+            sc.setConfig(config);
+            result = sc.uploadImage(config.getDefaultUpload(), getSubImg());
         }
     }
 
@@ -253,12 +261,8 @@ public class DragFrame extends JFrame {
             if (!e.isMetaDown()) {
 
                 if (e.getClickCount() == 2) {
+                    new Thread(new UploadRun()).start();
                     jframe.dispose();
-                    ScreenCaptor sc = ScreenCaptor.newInstance();
-                    sc.setConfig(config);
-                    String result = sc.uploadImage(config.getDefaultUpload(),
-                            subImg);
-                    ScreenCaptor.copyToClipboard(result);
                 }
             }
         }
@@ -301,10 +305,7 @@ public class DragFrame extends JFrame {
 
     }
 
-    private Config config;
-
-    public DragFrame(Config config) {
-        this.config = config;
+    public DragFrame() {
         this.useSystemUI();
         this.init();
         this.addComponents();
@@ -312,7 +313,17 @@ public class DragFrame extends JFrame {
         this.fullScreen();
     }
 
-    public static void main(String[] args) {
-        new DragFrame(new Config());
+    public String getResult() {
+        while (result == null || result.equals("")) {
+        }
+        return result;
+    }
+
+    public BufferedImage getSubImg() {
+        return subImg;
+    }
+
+    public void setSubImg(BufferedImage subImg) {
+        this.subImg = subImg;
     }
 }

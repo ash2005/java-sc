@@ -30,7 +30,6 @@ public class ScreenCaptor {
         this.apiStr = apiStr;
         File scf = this.screenShotSave();
         link = this.uploadFile(scf);
-        copyToClipboard(link);
     }
 
     private ScreenCaptor() {
@@ -116,9 +115,7 @@ public class ScreenCaptor {
     }
 
     public static void main(String[] args) {
-        ScreenCaptor sc = ScreenCaptor.newInstance("gdrive");
-
-        System.out.println("------");
+        ScreenCaptor sc = ScreenCaptor.newInstance();
         ScreenCaptor.copyToClipboard(sc.getLink());
         try {
             Thread.sleep(10000);
