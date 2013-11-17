@@ -172,7 +172,9 @@ public class ConfigFrame extends JFrame {
     private JLabel uploadToLabel;
 
     private void addcomponents() {
-
+        jframe.add(jpanel);
+        jframe.setLayout(null);
+        jpanel.setBounds(3, 3, jframe.getWidth(), jframe.getHeight());
         jpanel.add(savePathLabel);
         jpanel.add(savePathField);
         jpanel.add(browsePathButton);
@@ -196,7 +198,6 @@ public class ConfigFrame extends JFrame {
 
         jpanel.add(uploadChoice);
         jpanel.add(uploadToLabel);
-        add(jpanel);
         // add(chooser);
     }
 
