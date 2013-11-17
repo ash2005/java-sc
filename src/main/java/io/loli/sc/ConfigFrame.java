@@ -45,7 +45,7 @@ public class ConfigFrame extends JFrame {
     private void init() {
         // 确保内部类可以调用到此jframe
         this.jframe = this;
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(380, 300);
         setVisible(true);
         this.setResizable(false);
