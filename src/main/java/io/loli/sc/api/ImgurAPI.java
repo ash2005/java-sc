@@ -168,6 +168,7 @@ public class ImgurAPI extends APITools implements API {
         ObjectMapper mapper = new ObjectMapper();
         AccessToken token = null;
         try {
+            System.out.println(post(REFRESH_TOKEN_URL, params));
             token = mapper.readValue(post(REFRESH_TOKEN_URL, params),
                     AccessToken.class);
         } catch (JsonParseException e) {
@@ -227,6 +228,9 @@ public class ImgurAPI extends APITools implements API {
         @JsonProperty
         private String refresh_token;
 
+        @JsonProperty
+        private String account_username;
+
         public AccessToken() {
         }
 
@@ -268,6 +272,14 @@ public class ImgurAPI extends APITools implements API {
 
         public void setRefresh_token(String refresh_token) {
             this.refresh_token = refresh_token;
+        }
+
+        public String getAccount_username() {
+            return account_username;
+        }
+
+        public void setAccount_username(String account_username) {
+            this.account_username = account_username;
         }
 
     }
