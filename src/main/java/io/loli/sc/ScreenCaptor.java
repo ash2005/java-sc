@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 
 public class ScreenCaptor {
     private Config config;
-    private String link;
+    private volatile String link;
     private String apiStr;
 
     private ScreenCaptor(String apiStr) {
@@ -33,6 +33,10 @@ public class ScreenCaptor {
     }
 
     private ScreenCaptor() {
+        this.config = new Config();
+        this.apiStr = config.getDefaultUpload();
+        File scf = this.screenShotSave();
+        link = this.uploadFile(scf);
     }
 
     public static ScreenCaptor newInstance(String apiStr) {
@@ -111,6 +115,8 @@ public class ScreenCaptor {
     }
 
     public String getLink() {
+        while (link == null || link.equals("")) {
+        }
         return link;
     }
 

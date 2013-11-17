@@ -8,37 +8,52 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
 public class SCLauncher {
+    public static void launch(final String type) {
+        new Thread(new Runnable(){
+            @Override
+            public void run(){
+                switch (type) {
+                case "option":
+                    new ConfigFrame(new Config());
+                    break;
+                case "select":
+                    DragFrame df = new DragFrame();
+                    String s = df.getResult();
+                    ScreenCaptor.copyToClipboard(s);
+                    while (ifStrinClipboard(s)) {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case "full":
+                    try {
+                        //如果不延迟会连菜单一起捕捉到
+                        Thread.sleep(200);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                    ScreenCaptor sc = ScreenCaptor.newInstance();
+                    String result = sc.getLink();
+                    ScreenCaptor.copyToClipboard(result);
+                    while (ifStrinClipboard(result)) {
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                }
+                
+            }
+        }).start();
+    }
 
     public static void main(String[] args) {
-        switch (args[0]) {
-        case "option":
-            new ConfigFrame(new Config());
-            break;
-        case "select":
-            DragFrame df = new DragFrame();
-            String s = df.getResult();
-            ScreenCaptor.copyToClipboard(s);
-            while (ifStrinClipboard(s)) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            break;
-        case "full":
-            ScreenCaptor sc = ScreenCaptor.newInstance();
-            String result = sc.getLink();
-            ScreenCaptor.copyToClipboard(result);
-            while (ifStrinClipboard(result)) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            break;
-        }
+        launch(args[0]);
     }
 
     public static boolean ifStrinClipboard(String str) {
