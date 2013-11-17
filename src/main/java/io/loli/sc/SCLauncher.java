@@ -7,16 +7,23 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
+import javax.swing.SwingUtilities;
+
 public class SCLauncher {
     public static void launch(final String type) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                switch (type) {
-                case "option":
+        switch (type) {
+        case "option":
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
                     new ConfigFrame(new Config());
-                    break;
-                case "select":
+                }
+            });
+
+            break;
+        case "select":
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
                     try {
                         // 如果不延迟会连菜单一起捕捉到
                         Thread.sleep(200);
@@ -35,8 +42,15 @@ public class SCLauncher {
                             e.printStackTrace();
                         }
                     }
-                    break;
-                case "full":
+
+                }
+            }).start();
+            break;
+        case "full":
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+
                     try {
                         // 如果不延迟会连菜单一起捕捉到
                         Thread.sleep(200);
@@ -55,11 +69,11 @@ public class SCLauncher {
                             e.printStackTrace();
                         }
                     }
-                    break;
                 }
+            }).start();
+            break;
+        }
 
-            }
-        }).start();
     }
 
     public static void main(String[] args) {
