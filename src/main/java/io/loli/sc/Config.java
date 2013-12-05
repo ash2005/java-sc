@@ -15,7 +15,9 @@ import java.util.Properties;
 import javax.swing.filechooser.FileSystemView;
 
 public class Config {
+    //Config save directory
     private static final String CONFIG_DIR = ".SC-JAVA";
+    //Config file name
     private static final String CONFIG_FILE = "config.properties";
     private File path;
     private File propDir;
@@ -26,7 +28,7 @@ public class Config {
     private GDriveConfig gdriveConfig;
 
     /**
-     * 打开图片保存文件夹
+     * Open the directory where images in
      */
     @SuppressWarnings("unused")
     private void openFolder() {
