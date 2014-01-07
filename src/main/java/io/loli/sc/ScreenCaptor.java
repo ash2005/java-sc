@@ -25,12 +25,19 @@ public class ScreenCaptor {
     private volatile String link;
     private String apiStr;
 
+    //选择上传时不必保存
+    private ScreenCaptor(boolean upload) {
+        this.config = new Config();
+    }
+    
+    
     private ScreenCaptor(String apiStr) {
         this.config = new Config();
         this.apiStr = apiStr;
         File scf = this.screenShotSave();
         link = this.uploadFile(scf);
     }
+    
 
     private ScreenCaptor() {
         this.config = new Config();
@@ -46,6 +53,12 @@ public class ScreenCaptor {
     public static ScreenCaptor newInstance() {
         return new ScreenCaptor();
     }
+    
+    public static ScreenCaptor newInstance(boolean upload){
+        return new ScreenCaptor(false);
+    }
+    
+    
 
     private API getAPI() {
         API api = null;
@@ -81,7 +94,7 @@ public class ScreenCaptor {
     }
 
     private File saveImageToFile(BufferedImage img) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyymmddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         String name = sdf.format(new Date());
         File f = new File(config.getSavePath() + File.separator + name + ".png");
         try {

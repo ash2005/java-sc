@@ -207,7 +207,7 @@ public class DragFrame extends JFrame {
     class UploadRun implements Runnable {
         @Override
         public void run() {
-            ScreenCaptor sc = ScreenCaptor.newInstance();
+            ScreenCaptor sc = ScreenCaptor.newInstance(false);
             Config config = new Config();
             sc.setConfig(config);
             result = sc.uploadImage(config.getDefaultUpload(), getSubImg());
