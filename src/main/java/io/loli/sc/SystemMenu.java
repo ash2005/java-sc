@@ -22,7 +22,8 @@ public class SystemMenu {
 
     private SystemTray tray;// 系统托盘对象
     private TrayIcon trayIcon;// 托盘所代表的图标
-
+    
+    
     public void run() {
         Image image = readIcon();
         // 判断该系统是否支持"系统托盘"

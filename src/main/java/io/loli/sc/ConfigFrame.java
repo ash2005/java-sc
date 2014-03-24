@@ -31,6 +31,8 @@ public class ConfigFrame extends JFrame {
     private void useSystemUI() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            // System.setProperty("awt.useSystemAAFontSettings", "on");
+            // System.setProperty("swing.aatext", "true");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
