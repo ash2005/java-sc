@@ -15,9 +15,9 @@ import java.util.Properties;
 import javax.swing.filechooser.FileSystemView;
 
 public class Config {
-    //Config save directory
+    // Config save directory
     private static final String CONFIG_DIR = ".SC-JAVA";
-    //Config file name
+    // Config file name
     private static final String CONFIG_FILE = "config.properties";
     private File path;
     private File propDir;
@@ -26,6 +26,7 @@ public class Config {
     private ImgurConfig imgurConfig;
     private DropboxConfig dropboxConfig;
     private GDriveConfig gdriveConfig;
+    private ImageCloudConfig imageCloudConfig;
 
     /**
      * Open the directory where images in
@@ -175,6 +176,13 @@ public class Config {
             gdriveConfig.setRefreshToken(properties
                     .getProperty("gdrive.refreshToken"));
         }
+        if (properties.getProperty("imageCloud.email") != null) {
+            imageCloudConfig = new ImageCloudConfig();
+            imageCloudConfig.setEmail(properties
+                    .getProperty("imageCloud.email"));
+            imageCloudConfig.setToken(properties
+                    .getProperty("imageCloud.token"));
+        }
     }
 
     public ImgurConfig getImgurConfig() {
@@ -219,6 +227,17 @@ public class Config {
 
     public void setGdriveConfig(GDriveConfig gdriveConfig) {
         this.gdriveConfig = gdriveConfig;
+    }
+
+    public ImageCloudConfig getImageCloudConfig() {
+        if(imageCloudConfig == null){
+            imageCloudConfig = new ImageCloudConfig();
+        }
+        return imageCloudConfig;
+    }
+
+    public void setImageCloudConfig(ImageCloudConfig imageCloudConfig) {
+        this.imageCloudConfig = imageCloudConfig;
     }
 
 }

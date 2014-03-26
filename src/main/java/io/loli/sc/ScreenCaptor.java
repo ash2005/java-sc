@@ -3,6 +3,7 @@ package io.loli.sc;
 import io.loli.sc.api.API;
 import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
+import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.AWTException;
@@ -68,6 +69,8 @@ public class ScreenCaptor {
             api = new DropboxAPI(config);
         } else if (apiStr.equals("gdrive")) {
             api = new GDriveAPI(config);
+        } else if (apiStr.equals("imgCloud")) {
+            api = new ImageCloudAPI(config);
         }
         return api;
     }

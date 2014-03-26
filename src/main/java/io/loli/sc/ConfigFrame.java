@@ -2,6 +2,7 @@ package io.loli.sc;
 
 import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
+import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
 
 import java.awt.event.ActionEvent;
@@ -60,6 +61,8 @@ public class ConfigFrame extends JFrame {
             choice.addItem("dropbox");
         if (config.getGdriveConfig().getAccessToken() != null)
             choice.addItem("gdrive");
+        if (config.getImageCloudConfig().getToken() != null)
+            choice.addItem("imgCloud");
     }
 
     private void initComponents() {
@@ -93,6 +96,11 @@ public class ConfigFrame extends JFrame {
         gDriveAuthButton = new JButton("连接");
         gDriveRemoveAuthButton = new JButton("移除");
 
+        imageCloudLabel = new JLabel("imgCloud");
+        imageCloudAuthLabel = new JLabel();
+        imageCloudAuthButton = new JButton("连接");
+        imageCloudRemoveAuthButton = new JButton("移除");
+
         uploadToLabel = new JLabel("上传到");
     }
 
@@ -117,6 +125,14 @@ public class ConfigFrame extends JFrame {
         } else {
             gDriveAuthLabel.setText("已连接");
             gDriveAuthButton.setEnabled(false);
+        }
+
+        if (config.getImageCloudConfig().getToken() == null) {
+            imageCloudAuthLabel.setText("未连接");
+            imageCloudRemoveAuthButton.setEnabled(false);
+        } else {
+            imageCloudAuthLabel.setText("已连接");
+            imageCloudAuthButton.setEnabled(false);
         }
 
     }
@@ -144,6 +160,12 @@ public class ConfigFrame extends JFrame {
         gDriveAuthLabel.setBounds(110, 145, 60, 30);
         gDriveAuthButton.setBounds(185, 145, 60, 30);
         gDriveRemoveAuthButton.setBounds(250, 145, 60, 30);
+
+        imageCloudLabel.setBounds(40, 175, 60, 30);
+        imageCloudAuthLabel.setBounds(110, 175, 60, 30);
+        imageCloudAuthButton.setBounds(185, 175, 60, 30);
+        imageCloudRemoveAuthButton.setBounds(250, 175, 60, 30);
+
     }
 
     private JLabel savePathLabel;
@@ -168,6 +190,11 @@ public class ConfigFrame extends JFrame {
     private JLabel gDriveAuthLabel;
     private JButton gDriveAuthButton;
     private JButton gDriveRemoveAuthButton;
+
+    private JLabel imageCloudLabel;
+    private JLabel imageCloudAuthLabel;
+    private JButton imageCloudAuthButton;
+    private JButton imageCloudRemoveAuthButton;
 
     private JComboBox<String> uploadChoice;
 
@@ -197,6 +224,11 @@ public class ConfigFrame extends JFrame {
         jpanel.add(gDriveAuthLabel);
         jpanel.add(gDriveAuthButton);
         jpanel.add(gDriveRemoveAuthButton);
+
+        jpanel.add(imageCloudLabel);
+        jpanel.add(imageCloudAuthLabel);
+        jpanel.add(imageCloudAuthButton);
+        jpanel.add(imageCloudRemoveAuthButton);
 
         jpanel.add(uploadChoice);
         jpanel.add(uploadToLabel);
@@ -351,6 +383,42 @@ public class ConfigFrame extends JFrame {
                 gDriveRemoveAuthButton.setEnabled(false);
                 gDriveAuthLabel.setText("未连接");
                 uploadChoice.removeItem("gdrive");
+            }
+        });
+
+        imageCloudAuthButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ImageCloudAPI api = new ImageCloudAPI();
+                api.auth();
+                ImageCloudAPI.ClientToken token = api.getToken();
+                if (token.getId() != 0) {
+                    config.getImageCloudConfig().setToken(token.getToken());
+                    config.getImageCloudConfig().setEmail(
+                            token.getUser().getEmail());
+                    config.getImageCloudConfig().updateProperties(
+                            config.getProperties());
+                    config.save();
+                    imageCloudAuthLabel.setText("已连接");
+                    uploadChoice.addItem("imgCloud");
+                    imageCloudAuthButton.setEnabled(false);
+                    imageCloudRemoveAuthButton.setEnabled(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "您输入的邮箱或密码错误");
+                }
+            }
+        });
+        imageCloudRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getImageCloudConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                imageCloudAuthButton.setEnabled(true);
+                imageCloudRemoveAuthButton.setEnabled(false);
+                imageCloudAuthLabel.setText("未连接");
+                uploadChoice.removeItem("imgCloud");
             }
         });
     }
