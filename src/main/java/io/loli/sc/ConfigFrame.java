@@ -26,12 +26,22 @@ public class ConfigFrame extends JFrame {
     private JFrame jframe;
     private JPanel jpanel;
     private static final long serialVersionUID = 1L;
-
     private Config config;
 
     private void useSystemUI() {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            if (System.getProperty("os.name").toLowerCase().indexOf("linux") == -1)
+                UIManager.setLookAndFeel(UIManager
+                        .getSystemLookAndFeelClassName());
+            else {
+                try {
+                    UIManager
+                            .setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+                } catch (ClassNotFoundException e) {
+                    UIManager.setLookAndFeel(UIManager
+                            .getSystemLookAndFeelClassName());
+                }
+            }
             // System.setProperty("awt.useSystemAAFontSettings", "on");
             // System.setProperty("swing.aatext", "true");
         } catch (ClassNotFoundException e) {
@@ -262,7 +272,12 @@ public class ConfigFrame extends JFrame {
                 jframe.dispose();
             }
         });
-
+        try {
+            UIManager
+                    .setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+        } catch (Exception e) {
+            System.out.println("Unable to set native look and feel: " + e);
+        }
         okButton.addActionListener(new ActionListener() {
 
             @Override
