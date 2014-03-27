@@ -6,6 +6,9 @@ import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
 
+import java.awt.AWTException;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -111,14 +114,38 @@ public class ScreenCaptor {
         return uploadFile(saveImageToFile(image));
     }
 
+    /**
+     * 判断系统，并调用相应系统下的方法
+     * 
+     * @return
+     */
     public static BufferedImage screenShot() {
+        String system = System.getProperty("os.name").toLowerCase();
+        if (system.indexOf("windows") >= 0) {
+            return winScreenShot();
+        } else if (system.indexOf("linux") >= 0) {
+            return linuxScreenShot();
+        } else if (system.indexOf("mac") >= 0) {
+            return macScreenShot();
+        } else{
+            return winScreenShot();
+        }
+    }
+
+    /**
+     * linux下的截图
+     * 
+     * @return 返回截图的BufferedImage对象
+     */
+    private static BufferedImage linuxScreenShot() {
         File file = new File(System.getProperty("java.io.tmpdir"),
                 new Date().getTime() + ".png");
         try {
-            //需要加waitFor()等待执行结束
-            Runtime.getRuntime().exec(
-                    new String[] { "/bin/sh", "-c",
-                            "import -window root " + file.getCanonicalPath() }).waitFor();
+            // 需要加waitFor()等待执行结束
+            Runtime.getRuntime()
+                    .exec(new String[] { "/bin/sh", "-c",
+                            "import -window root " + file.getCanonicalPath() })
+                    .waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -128,8 +155,33 @@ public class ScreenCaptor {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return screenCapture;
+    }
+
+    /**
+     * windows下的截图
+     * 
+     * @return 返回截图的BufferedImage对象
+     */
+    private static BufferedImage winScreenShot() {
+        Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
+                .getScreenSize());
+        BufferedImage screenCapture = null;
+        try {
+            screenCapture = new Robot().createScreenCapture(screen);
+        } catch (AWTException e1) {
+            e1.printStackTrace();
+        }
+        return screenCapture;
+    }
+
+    /**
+     * mac下的截图
+     * 
+     * @return 返回截图的BufferedImage对象
+     */
+    private static BufferedImage macScreenShot() {
+        return winScreenShot();
     }
 
     public String getLink() {
