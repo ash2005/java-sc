@@ -6,9 +6,6 @@ import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
 
-import java.awt.AWTException;
-import java.awt.Rectangle;
-import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -26,19 +23,17 @@ public class ScreenCaptor {
     private volatile String link;
     private String apiStr;
 
-    //选择上传时不必保存
+    // 选择上传时不必保存
     private ScreenCaptor(boolean upload) {
         this.config = new Config();
     }
-    
-    
+
     private ScreenCaptor(String apiStr) {
         this.config = new Config();
         this.apiStr = apiStr;
         File scf = this.screenShotSave();
         link = this.uploadFile(scf);
     }
-    
 
     private ScreenCaptor() {
         this.config = new Config();
@@ -54,12 +49,10 @@ public class ScreenCaptor {
     public static ScreenCaptor newInstance() {
         return new ScreenCaptor();
     }
-    
-    public static ScreenCaptor newInstance(boolean upload){
+
+    public static ScreenCaptor newInstance(boolean upload) {
         return new ScreenCaptor(false);
     }
-    
-    
 
     private API getAPI() {
         API api = null;
@@ -119,14 +112,23 @@ public class ScreenCaptor {
     }
 
     public static BufferedImage screenShot() {
-        Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
-                .getScreenSize());
+        File file = new File(System.getProperty("java.io.tmpdir"),
+                new Date().getTime() + ".png");
+        try {
+            //需要加waitFor()等待执行结束
+            Runtime.getRuntime().exec(
+                    new String[] { "/bin/sh", "-c",
+                            "import -window root " + file.getCanonicalPath() }).waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
         BufferedImage screenCapture = null;
         try {
-            screenCapture = new Robot().createScreenCapture(screen);
-        } catch (AWTException e1) {
-            e1.printStackTrace();
+            screenCapture = ImageIO.read(file);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         return screenCapture;
     }
 
