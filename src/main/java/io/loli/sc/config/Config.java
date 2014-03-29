@@ -19,7 +19,6 @@ public class Config {
     private static final String CONFIG_DIR = ".SC-JAVA";
     // Config file name
     private static final String CONFIG_FILE = "config.properties";
-
     private File path;
     private File propDir;
     private File propFile;
@@ -55,10 +54,6 @@ public class Config {
         }
         properties.setProperty("savePath", getSavePath());
         properties.setProperty("defaultUpload", getDefaultUpload());
-        properties.setProperty("startWithSystem", isStartWithSystem()
-                .toString());
-        properties.setProperty("saveInDrive", isSaveInDrive().toString());
-        properties.setProperty("fileNameFormat", getFileNameFormat());
         return properties;
     }
 
@@ -90,12 +85,6 @@ public class Config {
     private String savePath;
 
     private String defaultUpload;
-
-    private String fileNameFormat;
-
-    private Boolean startWithSystem;
-
-    private Boolean saveInDrive;
 
     /**
      * 获取保存路径
@@ -159,12 +148,7 @@ public class Config {
             }
         }
         this.setSavePath(properties.getProperty("savePath"));
-        this.setFileNameFormat(properties.getProperty("fileNameFormat"));
         this.setDefaultUpload(properties.getProperty("defaultUpload"));
-        this.setSaveInDrive(Boolean.parseBoolean(properties
-                .getProperty("saveInDrive")));
-        this.setStartWithSystem(Boolean.parseBoolean(properties
-                .getProperty("startWithSystem")));
         // imgurConfig
         if (properties.getProperty("imgur.date") != null) {
             imgurConfig = new ImgurConfig();
@@ -246,7 +230,7 @@ public class Config {
     }
 
     public ImageCloudConfig getImageCloudConfig() {
-        if (imageCloudConfig == null) {
+        if(imageCloudConfig == null){
             imageCloudConfig = new ImageCloudConfig();
         }
         return imageCloudConfig;
@@ -254,39 +238,6 @@ public class Config {
 
     public void setImageCloudConfig(ImageCloudConfig imageCloudConfig) {
         this.imageCloudConfig = imageCloudConfig;
-    }
-
-    public String getFileNameFormat() {
-        if(fileNameFormat==null){
-            fileNameFormat = "yyyy-MM-dd mm:ss的屏幕截图";
-        }
-        return fileNameFormat;
-    }
-
-    public void setFileNameFormat(String fileDescFormat) {
-        this.fileNameFormat = fileDescFormat;
-    }
-
-    public Boolean isStartWithSystem() {
-        if (startWithSystem == null) {
-            startWithSystem = true;
-        }
-        return startWithSystem;
-    }
-
-    public void setStartWithSystem(boolean startWithSystem) {
-        this.startWithSystem = startWithSystem;
-    }
-
-    public Boolean isSaveInDrive() {
-        if (saveInDrive == null) {
-            saveInDrive = true;
-        }
-        return saveInDrive;
-    }
-
-    public void setSaveInDrive(boolean saveInDrive) {
-        this.saveInDrive = saveInDrive;
     }
 
 }

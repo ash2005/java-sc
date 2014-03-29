@@ -80,8 +80,8 @@ public class SwingSystemMenu implements SystemMenu {
 	private BufferedImage readIcon() {
 		BufferedImage bimg = null;
 		try {
-			bimg = ImageIO.read(ClassLoader
-					.getSystemResourceAsStream("icon.png"));
+			bimg = ImageIO.read(new MemoryCacheImageInputStream(ClassLoader
+					.getSystemResourceAsStream("icon.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
