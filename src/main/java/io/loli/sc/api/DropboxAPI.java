@@ -1,6 +1,6 @@
 package io.loli.sc.api;
 
-import io.loli.sc.Config;
+import io.loli.sc.config.Config;
 
 import java.awt.Desktop;
 import java.io.File;

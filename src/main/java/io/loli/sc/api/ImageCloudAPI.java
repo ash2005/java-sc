@@ -1,6 +1,6 @@
 package io.loli.sc.api;
 
-import io.loli.sc.Config;
+import io.loli.sc.config.Config;
 import io.loli.util.MD5Util;
 
 import java.io.File;

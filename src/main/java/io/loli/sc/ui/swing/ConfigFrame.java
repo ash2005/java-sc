@@ -1,9 +1,10 @@
-package io.loli.sc;
+package io.loli.sc.ui.swing;
 
 import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
+import io.loli.sc.config.Config;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

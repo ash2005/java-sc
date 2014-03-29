@@ -1,4 +1,4 @@
-package io.loli.sc;
+package io.loli.sc.core;
 
 import java.io.File;
 import java.io.FileInputStream;

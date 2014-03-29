@@ -1,10 +1,11 @@
-package io.loli.sc;
+package io.loli.sc.core;
 
 import io.loli.sc.api.API;
 import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
+import io.loli.sc.config.Config;
 
 import java.awt.AWTException;
 import java.awt.Rectangle;

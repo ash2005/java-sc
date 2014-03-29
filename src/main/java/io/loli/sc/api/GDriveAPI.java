@@ -1,8 +1,8 @@
 package io.loli.sc.api;
 
-import io.loli.sc.Config;
-import io.loli.sc.ScreenCaptor;
 import io.loli.sc.api.GDriveAPI.GDriveAuth.CodeExchangeException;
+import io.loli.sc.config.Config;
+import io.loli.sc.core.ScreenCaptor;
 
 import java.awt.Desktop;
 import java.awt.HeadlessException;

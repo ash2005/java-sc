@@ -1,4 +1,4 @@
-package io.loli.sc;
+package io.loli.sc.config;
 
 import java.awt.Desktop;
 import java.io.BufferedInputStream;

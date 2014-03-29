@@ -1,4 +1,8 @@
-package io.loli.sc;
+package io.loli.sc.ui.swing;
+
+import io.loli.sc.config.Config;
+import io.loli.sc.core.MP3Player;
+import io.loli.sc.core.ScreenCaptor;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;

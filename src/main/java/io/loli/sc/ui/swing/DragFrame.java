@@ -1,4 +1,7 @@
-package io.loli.sc;
+package io.loli.sc.ui.swing;
+
+import io.loli.sc.config.Config;
+import io.loli.sc.core.ScreenCaptor;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
