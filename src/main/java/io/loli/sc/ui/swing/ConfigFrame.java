@@ -24,7 +24,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 public class ConfigFrame extends JFrame {
-    private JFrame jframe;
     private JPanel jpanel;
     private static final long serialVersionUID = 1L;
     private Config config;
@@ -57,8 +56,6 @@ public class ConfigFrame extends JFrame {
     }
 
     private void init() {
-        // 确保内部类可以调用到此jframe
-        this.jframe = this;
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(390, 310);
         setVisible(true);
@@ -212,9 +209,9 @@ public class ConfigFrame extends JFrame {
     private JLabel uploadToLabel;
 
     private void addcomponents() {
-        jframe.add(jpanel);
-        jframe.setLayout(null);
-        jpanel.setBounds(3, 3, jframe.getWidth(), jframe.getHeight());
+        add(jpanel);
+        setLayout(null);
+        jpanel.setBounds(3, 3, getWidth(), getHeight());
         jpanel.add(savePathLabel);
         jpanel.add(savePathField);
         jpanel.add(browsePathButton);
@@ -270,7 +267,7 @@ public class ConfigFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                jframe.dispose();
+                dispose();
             }
         });
         try {
@@ -288,7 +285,7 @@ public class ConfigFrame extends JFrame {
                 if (obj != null)
                     config.setDefaultUpload((String) obj);
                 config.save();
-                jframe.dispose();
+                dispose();
             }
 
         });
