@@ -6,12 +6,17 @@ import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
 import io.loli.sc.config.Config;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,577 +36,664 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 public class ConfigFrame extends JFrame {
-	private JPanel jpanel1;
-	private JPanel jpanel2;
-	private JPanel jpanel3;
-	private static final long serialVersionUID = 1L;
-	private Config config;
-
-	class KeyListenPanel extends JDialog {
-		private static final long serialVersionUID = 5526655422709068055L;
-		private JLabel infoLabel = new JLabel("请按键");
-		private String option;
-		private Set<String> keyList = new LinkedHashSet<String>();
-
-		public KeyListenPanel(String option) {
-			super();
-			this.add(infoLabel);
-			this.option = option;
-			this.setSize(200, 100);
-			this.setVisible(true);
-			this.addListener();
-		}
-
-		private void addListener() {
-			this.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyPressed(KeyEvent e) {
-					keyList.add(KeyEvent.getKeyText(e.getKeyCode()));
-					
-				}
-			});
-		}
-	}
-
-	private void useSystemUI() {
-		try {
-			if (System.getProperty("os.name").toLowerCase().indexOf("linux") == -1)
-				UIManager.setLookAndFeel(UIManager
-						.getSystemLookAndFeelClassName());
-			else {
-				try {
-					UIManager
-							.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-				} catch (ClassNotFoundException e) {
-					UIManager.setLookAndFeel(UIManager
-							.getSystemLookAndFeelClassName());
-				}
-			}
-			// System.setProperty("awt.useSystemAAFontSettings", "on");
-			// System.setProperty("swing.aatext", "true");
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (UnsupportedLookAndFeelException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void init() {
-		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		setSize(392, 487);
-		setVisible(true);
-		this.setResizable(false);
-	}
-
-	private void addChoice(JComboBox<String> choice) {
-		if (config.getImgurConfig().getAccessToken() != null)
-			choice.addItem("imgur");
-		if (config.getDropboxConfig().getAccessToken() != null)
-			choice.addItem("dropbox");
-		if (config.getGdriveConfig().getAccessToken() != null)
-			choice.addItem("gdrive");
-		if (config.getImageCloudConfig().getToken() != null)
-			choice.addItem("imgCloud");
-	}
-
-	private void initComponents() {
-		savePathLabel = new JLabel("地址：");
-		savePathField = new JTextField(20);
-		browsePathButton = new JButton("浏览");
-		jpanel1 = new JPanel();
-		jpanel1.setLayout(null);
-
-		jpanel2 = new JPanel();
-		jpanel2.setLayout(null);
-		uploadChoice = new JComboBox<String>();
-		addChoice(uploadChoice);
-		uploadChoice.setSelectedItem(config.getDefaultUpload());
-
-		okButton = new JButton("确定");
-		cancelButton = new JButton("取消");
-		chooser = new JFileChooser();
-		savePathField.setText(config.getSavePath());
-
-		imgurLabel = new JLabel("imgur");
-		imgurAuthLabel = new JLabel();
-		imgurAuthButton = new JButton("连接");
-		imgurRemoveAuthButton = new JButton("移除");
-
-		dropboxLabel = new JLabel("dropbox");
-		dropboxAuthLabel = new JLabel();
-		dropboxAuthButton = new JButton("连接");
-		dropboxRemoveAuthButton = new JButton("移除");
-
-		gDriveLabel = new JLabel("gdrive");
-		gDriveAuthLabel = new JLabel();
-		gDriveAuthButton = new JButton("连接");
-		gDriveRemoveAuthButton = new JButton("移除");
-
-		imageCloudLabel = new JLabel("imgCloud");
-		imageCloudAuthLabel = new JLabel();
-		imageCloudAuthButton = new JButton("连接");
-		imageCloudRemoveAuthButton = new JButton("移除");
-		tab = new JTabbedPane();
-		uploadToLabel = new JLabel("上传到");
-
-		startWithSystemCheck = new JCheckBox("开机自启动");
-		startWithSystemCheck.setSelected(config.isStartWithSystem());
-
-		showNotifyAfterUploadCheck = new JCheckBox("上传后显示通知");
-		showNotifyAfterUploadCheck.setSelected(config
-				.getShowNotifyAfterUpload());
-
-		playMusicAfterUploadCheck = new JCheckBox("上传后播放音乐");
-		playMusicAfterUploadCheck.setSelected(config.getPlayMusicAfterUpload());
-
-		saveAsTitleLabel = new JLabel("<html><strong>截图保存在</strong></html>");
-
-		fileNameFormatLabel = new JLabel(
-				"<html><strong>截图文件名格式</strong></html>");
-		fileNameFormatField = new JTextField();
-		fileNameFormatField.setText(config.getFileNameFormat());
-
-		jpanel3 = new JPanel();
-		jpanel3.setLayout(null);
-		fullShotKeyLabel = new JLabel("全屏截图: ");
-		fullShotKeyButton = new JButton("点击设置");
-		fullShotKeyShowLabel = new JLabel();
-
-		selectShotKeyLabel = new JLabel("选择截图: ");
-		selectShotKeyButton = new JButton("点击设置");
-		selectShotKeyShowLabel = new JLabel();
-
-		// serviceListTable = new JTable();
-	}
-
-	private void initButton() {
-		if (config.getImgurConfig().getAccessToken() == null) {
-			imgurAuthLabel.setText("未连接");
-			imgurRemoveAuthButton.setEnabled(false);
-		} else {
-			imgurAuthLabel.setText("已连接");
-			imgurAuthButton.setEnabled(false);
-		}
-		if (config.getDropboxConfig().getAccessToken() == null) {
-			dropboxAuthLabel.setText("未连接");
-			dropboxRemoveAuthButton.setEnabled(false);
-		} else {
-			dropboxAuthLabel.setText("已连接");
-			dropboxAuthButton.setEnabled(false);
-		}
-		if (config.getGdriveConfig().getAccessToken() == null) {
-			gDriveAuthLabel.setText("未连接");
-			gDriveRemoveAuthButton.setEnabled(false);
-		} else {
-			gDriveAuthLabel.setText("已连接");
-			gDriveAuthButton.setEnabled(false);
-		}
-
-		if (config.getImageCloudConfig().getToken() == null) {
-			imageCloudAuthLabel.setText("未连接");
-			imageCloudRemoveAuthButton.setEnabled(false);
-		} else {
-			imageCloudAuthLabel.setText("已连接");
-			imageCloudAuthButton.setEnabled(false);
-		}
-
-	}
-
-	private void initComposition() {
-		savePathLabel.setBounds(30, 40, 70, 30);
-		savePathField.setBounds(90, 40, 180, 30);
-		browsePathButton.setBounds(280, 40, 60, 30);
-		okButton.setBounds(200, 415, 70, 30);
-		cancelButton.setBounds(290, 415, 70, 30);
-		uploadChoice.setBounds(90, 5, 140, 30);
-		uploadToLabel.setBounds(30, 5, 60, 30);
-
-		imgurLabel.setBounds(40, 75, 60, 30);
-		imgurAuthLabel.setBounds(85, 75, 60, 30);
-		imgurAuthButton.setBounds(185, 75, 60, 30);
-		imgurRemoveAuthButton.setBounds(250, 75, 60, 30);
-
-		dropboxLabel.setBounds(40, 110, 60, 30);
-		dropboxAuthLabel.setBounds(110, 110, 60, 30);
-		dropboxAuthButton.setBounds(185, 110, 60, 30);
-		dropboxRemoveAuthButton.setBounds(250, 110, 60, 30);
-
-		gDriveLabel.setBounds(40, 145, 60, 30);
-		gDriveAuthLabel.setBounds(110, 145, 60, 30);
-		gDriveAuthButton.setBounds(185, 145, 60, 30);
-		gDriveRemoveAuthButton.setBounds(250, 145, 60, 30);
-
-		imageCloudLabel.setBounds(40, 180, 60, 30);
-		imageCloudAuthLabel.setBounds(110, 180, 60, 30);
-		imageCloudAuthButton.setBounds(185, 180, 60, 30);
-		imageCloudRemoveAuthButton.setBounds(250, 180, 60, 30);
-
-		startWithSystemCheck.setBounds(40, 230, 200, 30);
-
-		saveAsTitleLabel.setBounds(10, 10, 190, 30);
-
-		fileNameFormatLabel.setBounds(10, 40, 300, 90);
-
-		fileNameFormatField.setBounds(40, 100, 200, 30);
-
-		playMusicAfterUploadCheck.setBounds(40, 150, 200, 30);
-
-		showNotifyAfterUploadCheck.setBounds(40, 190, 200, 30);
-
-		selectShotKeyLabel.setBounds(10, 30, 70, 30);
-		selectShotKeyButton.setBounds(80, 30, 80, 30);
-		selectShotKeyShowLabel.setBounds(160, 30, 100, 30);
-		fullShotKeyLabel.setBounds(10, 80, 70, 30);
-		fullShotKeyButton.setBounds(80, 80, 80, 30);
-		fullShotKeyShowLabel.setBounds(180, 80, 100, 30);
-	}
-
-	private JLabel savePathLabel;
-	private JTextField savePathField;
-	private JButton browsePathButton;
-
-	private JButton okButton;
-	private JButton cancelButton;
-
-	private JFileChooser chooser;
-	private JLabel imgurLabel;
-	private JLabel imgurAuthLabel;
-	private JButton imgurAuthButton;
-	private JButton imgurRemoveAuthButton;
-
-	private JLabel dropboxLabel;
-	private JLabel dropboxAuthLabel;
-	private JButton dropboxAuthButton;
-	private JButton dropboxRemoveAuthButton;
-
-	private JLabel gDriveLabel;
-	private JLabel gDriveAuthLabel;
-	private JButton gDriveAuthButton;
-	private JButton gDriveRemoveAuthButton;
-
-	private JLabel imageCloudLabel;
-	private JLabel imageCloudAuthLabel;
-	private JButton imageCloudAuthButton;
-	private JButton imageCloudRemoveAuthButton;
-
-	private JComboBox<String> uploadChoice;
-
-	private JLabel uploadToLabel;
-
-	private JCheckBox startWithSystemCheck;
-
-	private JCheckBox showNotifyAfterUploadCheck;
-	private JCheckBox playMusicAfterUploadCheck;
-
-	private JTabbedPane tab;
-
-	private JLabel saveAsTitleLabel;
-
-	private JLabel fileNameFormatLabel;
-
-	private JTextField fileNameFormatField;
-
-	private JLabel fullShotKeyLabel;
-	private JButton fullShotKeyButton;
-	private JLabel fullShotKeyShowLabel;
-
-	private JLabel selectShotKeyLabel;
-	private JButton selectShotKeyButton;
-	private JLabel selectShotKeyShowLabel;
-
-	// private JTable serviceListTable;
-
-	private void addcomponents() {
-		setLayout(null);
-		jpanel1.setBounds(3, 3, getWidth(), getHeight());
-		jpanel2.setBounds(3, 3, getWidth(), getHeight());
-		jpanel1.add(savePathLabel);
-		jpanel1.add(savePathField);
-		jpanel1.add(browsePathButton);
-
-		jpanel2.add(imgurLabel);
-		jpanel2.add(imgurAuthLabel);
-		jpanel2.add(imgurAuthButton);
-		jpanel2.add(imgurRemoveAuthButton);
-
-		jpanel2.add(dropboxLabel);
-		jpanel2.add(dropboxAuthLabel);
-		jpanel2.add(dropboxAuthButton);
-		jpanel2.add(dropboxRemoveAuthButton);
-
-		jpanel2.add(gDriveLabel);
-		jpanel2.add(gDriveAuthLabel);
-		jpanel2.add(gDriveAuthButton);
-		jpanel2.add(gDriveRemoveAuthButton);
-
-		jpanel2.add(imageCloudLabel);
-		jpanel2.add(imageCloudAuthLabel);
-		jpanel2.add(imageCloudAuthButton);
-		jpanel2.add(imageCloudRemoveAuthButton);
-
-		jpanel2.add(uploadChoice);
-		jpanel2.add(uploadToLabel);
-		jpanel1.add(startWithSystemCheck);
-		jpanel1.add(saveAsTitleLabel);
-
-		jpanel1.add(fileNameFormatLabel);
-
-		jpanel1.add(fileNameFormatField);
-
-		jpanel1.add(playMusicAfterUploadCheck);
-		jpanel1.add(showNotifyAfterUploadCheck);
-
-		jpanel3.add(fullShotKeyLabel);
-		jpanel3.add(fullShotKeyButton);
-		jpanel3.add(fullShotKeyShowLabel);
-
-		jpanel3.add(selectShotKeyLabel);
-		jpanel3.add(selectShotKeyButton);
-		jpanel3.add(selectShotKeyShowLabel);
-
-		add(tab);
-		tab.setTabPlacement(JTabbedPane.TOP);
-		tab.add("通常设置", jpanel1);
-		tab.add("连接网站", jpanel2);
-		tab.add("快捷键设置", jpanel3);
-		// TODO 快捷键设置的TAB
-		// TODO 关于，版本，自动升级的选项
-		// TODO 上传后显示托盘消息
-		// TODO 上传成功后播放音乐
-		tab.setBounds(5, 5, 382, 400);
-
-		add(okButton);
-		add(cancelButton);
-
-		// add(chooser);
-	}
-
-	public void addListeners() {
-		browsePathButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				int result;
-				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				File file;
-				result = chooser.showSaveDialog(null);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					file = chooser.getSelectedFile();
-					if (file.exists()) {
-						savePathField.setText(file.getAbsolutePath());
-					} else {
-						JOptionPane.showMessageDialog(null, "文件不存在");
-					}
-				} else if (result == JFileChooser.CANCEL_OPTION) {
-				} else if (result == JFileChooser.ERROR_OPTION) {
-				}
-			}
-		});
-
-		cancelButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dispose();
-			}
-		});
-		okButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				config.setSavePath(savePathField.getText());
-				config.setFileNameFormat(fileNameFormatField.getText());
-				config.setStartWithSystem(startWithSystemCheck.isSelected());
-				config.setPlayMusicAfterUpload(playMusicAfterUploadCheck
-						.isSelected());
-				config.setShowNotifyAfterUpload(showNotifyAfterUploadCheck
-						.isSelected());
-				Object obj = uploadChoice.getSelectedItem();
-				if (obj != null)
-					config.setDefaultUpload((String) obj);
-				config.save();
-				dispose();
-			}
-
-		});
-
-		imgurAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				ImgurAPI api = new ImgurAPI();
-				api.auth();
-				String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
-				ImgurAPI.AccessToken token = api.pinToToken(pin);
-				config.getImgurConfig().setAccessToken(token.getAccess_token());
-				config.getImgurConfig().setRefreshToken(
-						token.getRefresh_token());
-				config.getImgurConfig().setDate(new Date());
-				config.getImgurConfig()
-						.updateProperties(config.getProperties());
-				config.save();
-				imgurAuthButton.setEnabled(false);
-				imgurRemoveAuthButton.setEnabled(true);
-				imgurAuthLabel.setText("已连接");
-				uploadChoice.addItem("imgur");
-			}
-
-		});
-
-		imgurRemoveAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				config.getImgurConfig().removeFromProperties(
-						config.getProperties());
-				config.save();
-				imgurAuthButton.setEnabled(true);
-				imgurRemoveAuthButton.setEnabled(false);
-				imgurAuthLabel.setText("未连接");
-				uploadChoice.removeItem("imgur");
-			}
-
-		});
-
-		dropboxAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				DropboxAPI api = new DropboxAPI();
-				api.auth();
-				String pin = JOptionPane.showInputDialog("请输入认证码");
-				DropboxAPI.AccessToken token = api.pinToToken(pin);
-				config.getDropboxConfig().setAccessToken(
-						token.getAccess_token());
-
-				config.getDropboxConfig().setUid(token.getUid());
-				config.getDropboxConfig().updateProperties(
-						config.getProperties());
-				config.save();
-				dropboxAuthButton.setEnabled(false);
-				dropboxRemoveAuthButton.setEnabled(true);
-				dropboxAuthLabel.setText("已连接");
-				uploadChoice.addItem("dropbox");
-			}
-
-		});
-
-		dropboxRemoveAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				config.getDropboxConfig().removeFromProperties(
-						config.getProperties());
-				config.save();
-				dropboxAuthButton.setEnabled(true);
-				dropboxRemoveAuthButton.setEnabled(false);
-				dropboxAuthLabel.setText("未连接");
-				uploadChoice.removeItem("dropbox");
-			}
-
-		});
-		gDriveAuthButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				GDriveAPI api = new GDriveAPI();
-				api.auth();
-				String pin = JOptionPane.showInputDialog("请输入code");
-				GDriveAPI.AccessToken token = api.pinToToken(pin);
-				config.getGdriveConfig()
-						.setAccessToken(token.getAccess_token());
-				config.getGdriveConfig().setRefreshToken(
-						token.getRefresh_token());
-				config.getGdriveConfig().updateProperties(
-						config.getProperties());
-				config.save();
-				gDriveAuthLabel.setText("已连接");
-				uploadChoice.addItem("gdrive");
-				gDriveAuthButton.setEnabled(false);
-				gDriveRemoveAuthButton.setEnabled(true);
-			}
-		});
-		gDriveRemoveAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				config.getGdriveConfig().removeFromProperties(
-						config.getProperties());
-				config.save();
-				gDriveAuthButton.setEnabled(true);
-				gDriveRemoveAuthButton.setEnabled(false);
-				gDriveAuthLabel.setText("未连接");
-				uploadChoice.removeItem("gdrive");
-			}
-		});
-
-		imageCloudAuthButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				ImageCloudAPI api = new ImageCloudAPI();
-				api.auth();
-				ImageCloudAPI.ClientToken token = api.getToken();
-				if (token.getId() != 0) {
-					config.getImageCloudConfig().setToken(token.getToken());
-					config.getImageCloudConfig().setEmail(
-							token.getUser().getEmail());
-					config.getImageCloudConfig().updateProperties(
-							config.getProperties());
-					config.save();
-					imageCloudAuthLabel.setText("已连接");
-					uploadChoice.addItem("imgCloud");
-					imageCloudAuthButton.setEnabled(false);
-					imageCloudRemoveAuthButton.setEnabled(true);
-				} else {
-					JOptionPane.showMessageDialog(null, "您输入的邮箱或密码错误");
-				}
-			}
-		});
-		imageCloudRemoveAuthButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				config.getImageCloudConfig().removeFromProperties(
-						config.getProperties());
-				config.save();
-				imageCloudAuthButton.setEnabled(true);
-				imageCloudRemoveAuthButton.setEnabled(false);
-				imageCloudAuthLabel.setText("未连接");
-				uploadChoice.removeItem("imgCloud");
-			}
-		});
-		fullShotKeyButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				KeyListenPanel panel = new KeyListenPanel("full");
-			}
-		});
-
-	}
-
-	public ConfigFrame(Config config) {
-		super("设置");
-		setConfig(config);
-		this.useSystemUI();
-		this.init();
-		this.initComponents();
-		this.initComposition();
-		this.initButton();
-		this.addcomponents();
-		this.addListeners();
-	}
-
-	public void setConfig(Config config) {
-		this.config = config;
-	}
-
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				new ConfigFrame(new Config());
-			}
-		});
-	}
+    private JPanel jpanel1;
+    private JPanel jpanel2;
+    private JPanel jpanel3;
+    private static final long serialVersionUID = 1L;
+    private Config config;
+
+    class KeyListenPanel extends JDialog {
+        private static final long serialVersionUID = 5526655422709068055L;
+        private JLabel infoLabel = new JLabel("请按键");
+        private String option;
+        private Set<String> keyList = new LinkedHashSet<String>();
+        private Set<String> tempKeyList = new LinkedHashSet<String>();
+        private JButton okButton = new JButton("确认");
+
+        public KeyListenPanel(String option) {
+            super();
+            this.setLayout(null);
+            this.add(infoLabel);
+            this.add(okButton);
+            infoLabel.setBounds(40, 10, 160, 30);
+            okButton.setBounds(40, 43, 100, 30);
+            this.option = option;
+            this.setSize(200, 110);
+
+            this.addListener();
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            final int WIDTH = screenSize.width;
+            final int HEIGHT = screenSize.height;
+            this.setLocation(WIDTH / 2 - getWidth() / 2, HEIGHT / 2
+                    - getHeight() / 2);
+
+            okButton.setEnabled(false);
+            this.setVisible(true);
+            this.requestFocus();
+        }
+
+        private void addListener() {
+            this.addFocusListener(new FocusListener() {
+
+                @Override
+                public void focusGained(FocusEvent e) {
+                    keyList.clear();
+                    tempKeyList.clear();
+                }
+
+                @Override
+                public void focusLost(FocusEvent e) {
+                    keyList.clear();
+                    tempKeyList.clear();
+                }
+
+            });
+            this.addKeyListener(new KeyAdapter() {
+                // 按键应该一次性输入，如果按着多个松开一个然后再按另一个，这样会重新计算
+                String lastReleaseKey;
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    okButton.setEnabled(true);
+                    // 判断是否是一次新的输入
+                    if (tempKeyList.size() == 0) {
+                        // 如果是的就清空已经存储的快捷键
+                        keyList.clear();
+                    }
+                    // 判断用户上次是否松开
+                    if (lastReleaseKey != null) {
+                        keyList.remove(lastReleaseKey);
+                    }
+                    keyList.add(KeyEvent.getKeyText(e.getKeyCode()));
+                    tempKeyList.add(KeyEvent.getKeyText(e.getKeyCode()));
+                    StringBuilder sb = new StringBuilder();
+                    Iterator<String> itr = keyList.iterator();
+                    for (int i = 0; itr.hasNext(); i++) {
+                        sb.append(itr.next());
+                        if (i != keyList.size() - 1) {
+                            sb.append("+");
+                        }
+                    }
+                    infoLabel.setText(sb.toString());
+                    lastReleaseKey = null;
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    tempKeyList.remove(KeyEvent.getKeyText(e.getKeyCode()));
+                    lastReleaseKey = KeyEvent.getKeyText(e.getKeyCode());
+                }
+            });
+            okButton.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (option.equals("select")) {
+                        config.setSelectHotKey(infoLabel.getText());
+                        selectShotKeyShowLabel.setText(infoLabel.getText());
+                    } else {
+                        config.setFullHotKey(infoLabel.getText());
+                        fullShotKeyShowLabel.setText(infoLabel.getText());
+
+                    }
+                    dispose();
+                }
+            });
+        }
+    }
+
+    private void useSystemUI() {
+        try {
+            if (System.getProperty("os.name").toLowerCase().indexOf("linux") == -1)
+                UIManager.setLookAndFeel(UIManager
+                        .getSystemLookAndFeelClassName());
+            else {
+                try {
+                    UIManager
+                            .setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
+                } catch (ClassNotFoundException e) {
+                    UIManager.setLookAndFeel(UIManager
+                            .getSystemLookAndFeelClassName());
+                }
+            }
+            // System.setProperty("awt.useSystemAAFontSettings", "on");
+            // System.setProperty("swing.aatext", "true");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void initFatherFrame() {
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setSize(392, 487);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final int WIDTH = screenSize.width;
+        final int HEIGHT = screenSize.height;
+        this.setLocation(WIDTH / 2 - this.getWidth() / 2,
+                HEIGHT / 2 - this.getHeight() / 2);
+        this.setResizable(false);
+        setVisible(true);
+    }
+
+    private void addChoice(JComboBox<String> choice) {
+        if (config.getImgurConfig().getAccessToken() != null)
+            choice.addItem("imgur");
+        if (config.getDropboxConfig().getAccessToken() != null)
+            choice.addItem("dropbox");
+        if (config.getGdriveConfig().getAccessToken() != null)
+            choice.addItem("gdrive");
+        if (config.getImageCloudConfig().getToken() != null)
+            choice.addItem("imgCloud");
+    }
+
+    private void initComponents() {
+        savePathLabel = new JLabel("地址：");
+        savePathField = new JTextField(20);
+        browsePathButton = new JButton("浏览");
+        jpanel1 = new JPanel();
+        jpanel1.setLayout(null);
+
+        jpanel2 = new JPanel();
+        jpanel2.setLayout(null);
+        uploadChoice = new JComboBox<String>();
+        addChoice(uploadChoice);
+        uploadChoice.setSelectedItem(config.getDefaultUpload());
+
+        okButton = new JButton("确定");
+        cancelButton = new JButton("取消");
+        chooser = new JFileChooser();
+        savePathField.setText(config.getSavePath());
+
+        imgurLabel = new JLabel("imgur");
+        imgurAuthLabel = new JLabel();
+        imgurAuthButton = new JButton("连接");
+        imgurRemoveAuthButton = new JButton("移除");
+
+        dropboxLabel = new JLabel("dropbox");
+        dropboxAuthLabel = new JLabel();
+        dropboxAuthButton = new JButton("连接");
+        dropboxRemoveAuthButton = new JButton("移除");
+
+        gDriveLabel = new JLabel("gdrive");
+        gDriveAuthLabel = new JLabel();
+        gDriveAuthButton = new JButton("连接");
+        gDriveRemoveAuthButton = new JButton("移除");
+
+        imageCloudLabel = new JLabel("imgCloud");
+        imageCloudAuthLabel = new JLabel();
+        imageCloudAuthButton = new JButton("连接");
+        imageCloudRemoveAuthButton = new JButton("移除");
+        tab = new JTabbedPane();
+        uploadToLabel = new JLabel("上传到");
+
+        startWithSystemCheck = new JCheckBox("开机自启动");
+        startWithSystemCheck.setSelected(config.isStartWithSystem());
+
+        showNotifyAfterUploadCheck = new JCheckBox("上传后显示通知");
+        showNotifyAfterUploadCheck.setSelected(config
+                .getShowNotifyAfterUpload());
+
+        playMusicAfterUploadCheck = new JCheckBox("上传后播放音乐");
+        playMusicAfterUploadCheck.setSelected(config.getPlayMusicAfterUpload());
+
+        saveAsTitleLabel = new JLabel("<html><strong>截图保存在</strong></html>");
+
+        fileNameFormatLabel = new JLabel(
+                "<html><strong>截图文件名格式</strong></html>");
+        fileNameFormatField = new JTextField();
+        fileNameFormatField.setText(config.getFileNameFormat());
+
+        jpanel3 = new JPanel();
+        jpanel3.setLayout(null);
+        fullShotKeyLabel = new JLabel("全屏截图: ");
+        fullShotKeyButton = new JButton("点击设置");
+        fullShotKeyShowLabel = new JLabel(config.getFullHotKey());
+
+        selectShotKeyLabel = new JLabel("选择截图: ");
+        selectShotKeyButton = new JButton("点击设置");
+        selectShotKeyShowLabel = new JLabel(config.getSelectHotKey());
+
+        // serviceListTable = new JTable();
+    }
+
+    private void initButton() {
+        if (config.getImgurConfig().getAccessToken() == null) {
+            imgurAuthLabel.setText("未连接");
+            imgurRemoveAuthButton.setEnabled(false);
+        } else {
+            imgurAuthLabel.setText("已连接");
+            imgurAuthButton.setEnabled(false);
+        }
+        if (config.getDropboxConfig().getAccessToken() == null) {
+            dropboxAuthLabel.setText("未连接");
+            dropboxRemoveAuthButton.setEnabled(false);
+        } else {
+            dropboxAuthLabel.setText("已连接");
+            dropboxAuthButton.setEnabled(false);
+        }
+        if (config.getGdriveConfig().getAccessToken() == null) {
+            gDriveAuthLabel.setText("未连接");
+            gDriveRemoveAuthButton.setEnabled(false);
+        } else {
+            gDriveAuthLabel.setText("已连接");
+            gDriveAuthButton.setEnabled(false);
+        }
+
+        if (config.getImageCloudConfig().getToken() == null) {
+            imageCloudAuthLabel.setText("未连接");
+            imageCloudRemoveAuthButton.setEnabled(false);
+        } else {
+            imageCloudAuthLabel.setText("已连接");
+            imageCloudAuthButton.setEnabled(false);
+        }
+
+    }
+
+    private void initComposition() {
+
+        savePathLabel.setBounds(30, 40, 70, 30);
+        savePathField.setBounds(90, 40, 180, 30);
+        browsePathButton.setBounds(280, 40, 60, 30);
+        okButton.setBounds(200, 415, 70, 30);
+        cancelButton.setBounds(290, 415, 70, 30);
+        uploadChoice.setBounds(90, 5, 140, 30);
+        uploadToLabel.setBounds(30, 5, 60, 30);
+
+        imgurLabel.setBounds(40, 75, 60, 30);
+        imgurAuthLabel.setBounds(85, 75, 60, 30);
+        imgurAuthButton.setBounds(185, 75, 60, 30);
+        imgurRemoveAuthButton.setBounds(250, 75, 60, 30);
+
+        dropboxLabel.setBounds(40, 110, 60, 30);
+        dropboxAuthLabel.setBounds(110, 110, 60, 30);
+        dropboxAuthButton.setBounds(185, 110, 60, 30);
+        dropboxRemoveAuthButton.setBounds(250, 110, 60, 30);
+
+        gDriveLabel.setBounds(40, 145, 60, 30);
+        gDriveAuthLabel.setBounds(110, 145, 60, 30);
+        gDriveAuthButton.setBounds(185, 145, 60, 30);
+        gDriveRemoveAuthButton.setBounds(250, 145, 60, 30);
+
+        imageCloudLabel.setBounds(40, 180, 60, 30);
+        imageCloudAuthLabel.setBounds(110, 180, 60, 30);
+        imageCloudAuthButton.setBounds(185, 180, 60, 30);
+        imageCloudRemoveAuthButton.setBounds(250, 180, 60, 30);
+
+        startWithSystemCheck.setBounds(40, 230, 200, 30);
+
+        saveAsTitleLabel.setBounds(10, 10, 190, 30);
+
+        fileNameFormatLabel.setBounds(10, 40, 300, 90);
+
+        fileNameFormatField.setBounds(40, 100, 200, 30);
+
+        playMusicAfterUploadCheck.setBounds(40, 150, 200, 30);
+
+        showNotifyAfterUploadCheck.setBounds(40, 190, 200, 30);
+
+        selectShotKeyLabel.setBounds(10, 30, 70, 30);
+        selectShotKeyButton.setBounds(80, 30, 80, 30);
+        selectShotKeyShowLabel.setBounds(180, 30, 100, 30);
+        fullShotKeyLabel.setBounds(10, 80, 70, 30);
+        fullShotKeyButton.setBounds(80, 80, 80, 30);
+        fullShotKeyShowLabel.setBounds(180, 80, 100, 30);
+    }
+
+    private JLabel savePathLabel;
+    private JTextField savePathField;
+    private JButton browsePathButton;
+
+    private JButton okButton;
+    private JButton cancelButton;
+
+    private JFileChooser chooser;
+    private JLabel imgurLabel;
+    private JLabel imgurAuthLabel;
+    private JButton imgurAuthButton;
+    private JButton imgurRemoveAuthButton;
+
+    private JLabel dropboxLabel;
+    private JLabel dropboxAuthLabel;
+    private JButton dropboxAuthButton;
+    private JButton dropboxRemoveAuthButton;
+
+    private JLabel gDriveLabel;
+    private JLabel gDriveAuthLabel;
+    private JButton gDriveAuthButton;
+    private JButton gDriveRemoveAuthButton;
+
+    private JLabel imageCloudLabel;
+    private JLabel imageCloudAuthLabel;
+    private JButton imageCloudAuthButton;
+    private JButton imageCloudRemoveAuthButton;
+
+    private JComboBox<String> uploadChoice;
+
+    private JLabel uploadToLabel;
+
+    private JCheckBox startWithSystemCheck;
+
+    private JCheckBox showNotifyAfterUploadCheck;
+    private JCheckBox playMusicAfterUploadCheck;
+
+    private JTabbedPane tab;
+
+    private JLabel saveAsTitleLabel;
+
+    private JLabel fileNameFormatLabel;
+
+    private JTextField fileNameFormatField;
+
+    private JLabel fullShotKeyLabel;
+    private JButton fullShotKeyButton;
+    private JLabel fullShotKeyShowLabel;
+
+    private JLabel selectShotKeyLabel;
+    private JButton selectShotKeyButton;
+    private JLabel selectShotKeyShowLabel;
+
+    // private JTable serviceListTable;
+
+    private void addcomponents() {
+        setLayout(null);
+        jpanel1.setBounds(3, 3, getWidth(), getHeight());
+        jpanel2.setBounds(3, 3, getWidth(), getHeight());
+        jpanel1.add(savePathLabel);
+        jpanel1.add(savePathField);
+        jpanel1.add(browsePathButton);
+
+        jpanel2.add(imgurLabel);
+        jpanel2.add(imgurAuthLabel);
+        jpanel2.add(imgurAuthButton);
+        jpanel2.add(imgurRemoveAuthButton);
+
+        jpanel2.add(dropboxLabel);
+        jpanel2.add(dropboxAuthLabel);
+        jpanel2.add(dropboxAuthButton);
+        jpanel2.add(dropboxRemoveAuthButton);
+
+        jpanel2.add(gDriveLabel);
+        jpanel2.add(gDriveAuthLabel);
+        jpanel2.add(gDriveAuthButton);
+        jpanel2.add(gDriveRemoveAuthButton);
+
+        jpanel2.add(imageCloudLabel);
+        jpanel2.add(imageCloudAuthLabel);
+        jpanel2.add(imageCloudAuthButton);
+        jpanel2.add(imageCloudRemoveAuthButton);
+
+        jpanel2.add(uploadChoice);
+        jpanel2.add(uploadToLabel);
+        jpanel1.add(startWithSystemCheck);
+        jpanel1.add(saveAsTitleLabel);
+
+        jpanel1.add(fileNameFormatLabel);
+
+        jpanel1.add(fileNameFormatField);
+
+        jpanel1.add(playMusicAfterUploadCheck);
+        jpanel1.add(showNotifyAfterUploadCheck);
+
+        jpanel3.add(fullShotKeyLabel);
+        jpanel3.add(fullShotKeyButton);
+        jpanel3.add(fullShotKeyShowLabel);
+
+        jpanel3.add(selectShotKeyLabel);
+        jpanel3.add(selectShotKeyButton);
+        jpanel3.add(selectShotKeyShowLabel);
+
+        add(tab);
+        tab.setTabPlacement(JTabbedPane.TOP);
+        tab.add("通常设置", jpanel1);
+        tab.add("连接网站", jpanel2);
+        tab.add("快捷键设置", jpanel3);
+        // TODO 快捷键设置的TAB
+        // TODO 关于，版本，自动升级的选项
+        // TODO 上传后显示托盘消息
+        // TODO 上传成功后播放音乐
+        tab.setBounds(5, 5, 382, 400);
+
+        add(okButton);
+        add(cancelButton);
+
+        // add(chooser);
+    }
+
+    public void addListeners() {
+        browsePathButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int result;
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                File file;
+                result = chooser.showSaveDialog(null);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    file = chooser.getSelectedFile();
+                    if (file.exists()) {
+                        savePathField.setText(file.getAbsolutePath());
+                    } else {
+                        JOptionPane.showMessageDialog(null, "文件不存在");
+                    }
+                } else if (result == JFileChooser.CANCEL_OPTION) {
+                } else if (result == JFileChooser.ERROR_OPTION) {
+                }
+            }
+        });
+
+        cancelButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        });
+        okButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.setSavePath(savePathField.getText());
+                config.setFileNameFormat(fileNameFormatField.getText());
+                config.setStartWithSystem(startWithSystemCheck.isSelected());
+                config.setPlayMusicAfterUpload(playMusicAfterUploadCheck
+                        .isSelected());
+                config.setShowNotifyAfterUpload(showNotifyAfterUploadCheck
+                        .isSelected());
+                Object obj = uploadChoice.getSelectedItem();
+                if (obj != null)
+                    config.setDefaultUpload((String) obj);
+                config.save();
+                dispose();
+            }
+
+        });
+
+        imgurAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ImgurAPI api = new ImgurAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
+                ImgurAPI.AccessToken token = api.pinToToken(pin);
+                config.getImgurConfig().setAccessToken(token.getAccess_token());
+                config.getImgurConfig().setRefreshToken(
+                        token.getRefresh_token());
+                config.getImgurConfig().setDate(new Date());
+                config.getImgurConfig()
+                        .updateProperties(config.getProperties());
+                config.save();
+                imgurAuthButton.setEnabled(false);
+                imgurRemoveAuthButton.setEnabled(true);
+                imgurAuthLabel.setText("已连接");
+                uploadChoice.addItem("imgur");
+            }
+
+        });
+
+        imgurRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getImgurConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                imgurAuthButton.setEnabled(true);
+                imgurRemoveAuthButton.setEnabled(false);
+                imgurAuthLabel.setText("未连接");
+                uploadChoice.removeItem("imgur");
+            }
+
+        });
+
+        dropboxAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DropboxAPI api = new DropboxAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入认证码");
+                DropboxAPI.AccessToken token = api.pinToToken(pin);
+                config.getDropboxConfig().setAccessToken(
+                        token.getAccess_token());
+
+                config.getDropboxConfig().setUid(token.getUid());
+                config.getDropboxConfig().updateProperties(
+                        config.getProperties());
+                config.save();
+                dropboxAuthButton.setEnabled(false);
+                dropboxRemoveAuthButton.setEnabled(true);
+                dropboxAuthLabel.setText("已连接");
+                uploadChoice.addItem("dropbox");
+            }
+
+        });
+
+        dropboxRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getDropboxConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                dropboxAuthButton.setEnabled(true);
+                dropboxRemoveAuthButton.setEnabled(false);
+                dropboxAuthLabel.setText("未连接");
+                uploadChoice.removeItem("dropbox");
+            }
+
+        });
+        gDriveAuthButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GDriveAPI api = new GDriveAPI();
+                api.auth();
+                String pin = JOptionPane.showInputDialog("请输入code");
+                GDriveAPI.AccessToken token = api.pinToToken(pin);
+                config.getGdriveConfig()
+                        .setAccessToken(token.getAccess_token());
+                config.getGdriveConfig().setRefreshToken(
+                        token.getRefresh_token());
+                config.getGdriveConfig().updateProperties(
+                        config.getProperties());
+                config.save();
+                gDriveAuthLabel.setText("已连接");
+                uploadChoice.addItem("gdrive");
+                gDriveAuthButton.setEnabled(false);
+                gDriveRemoveAuthButton.setEnabled(true);
+            }
+        });
+        gDriveRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getGdriveConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                gDriveAuthButton.setEnabled(true);
+                gDriveRemoveAuthButton.setEnabled(false);
+                gDriveAuthLabel.setText("未连接");
+                uploadChoice.removeItem("gdrive");
+            }
+        });
+
+        imageCloudAuthButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ImageCloudAPI api = new ImageCloudAPI();
+                api.auth();
+                ImageCloudAPI.ClientToken token = api.getToken();
+                if (token.getId() != 0) {
+                    config.getImageCloudConfig().setToken(token.getToken());
+                    config.getImageCloudConfig().setEmail(
+                            token.getUser().getEmail());
+                    config.getImageCloudConfig().updateProperties(
+                            config.getProperties());
+                    config.save();
+                    imageCloudAuthLabel.setText("已连接");
+                    uploadChoice.addItem("imgCloud");
+                    imageCloudAuthButton.setEnabled(false);
+                    imageCloudRemoveAuthButton.setEnabled(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "您输入的邮箱或密码错误");
+                }
+            }
+        });
+        imageCloudRemoveAuthButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                config.getImageCloudConfig().removeFromProperties(
+                        config.getProperties());
+                config.save();
+                imageCloudAuthButton.setEnabled(true);
+                imageCloudRemoveAuthButton.setEnabled(false);
+                imageCloudAuthLabel.setText("未连接");
+                uploadChoice.removeItem("imgCloud");
+            }
+        });
+        fullShotKeyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new KeyListenPanel("full");
+            }
+        });
+
+        selectShotKeyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new KeyListenPanel("select");
+            }
+        });
+
+    }
+
+    public ConfigFrame(Config config) {
+        super("设置");
+        setConfig(config);
+        this.useSystemUI();
+        this.initComponents();
+        this.initComposition();
+        this.initButton();
+        this.addcomponents();
+        this.addListeners();
+        this.initFatherFrame();
+    }
+
+    public void setConfig(Config config) {
+        this.config = config;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ConfigFrame(new Config());
+            }
+        });
+    }
 }
