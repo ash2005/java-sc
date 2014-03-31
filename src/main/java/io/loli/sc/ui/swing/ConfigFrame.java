@@ -8,12 +8,17 @@ import io.loli.sc.config.Config;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -28,8 +33,35 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class ConfigFrame extends JFrame {
 	private JPanel jpanel1;
 	private JPanel jpanel2;
+	private JPanel jpanel3;
 	private static final long serialVersionUID = 1L;
 	private Config config;
+
+	class KeyListenPanel extends JDialog {
+		private static final long serialVersionUID = 5526655422709068055L;
+		private JLabel infoLabel = new JLabel("请按键");
+		private String option;
+		private Set<String> keyList = new LinkedHashSet<String>();
+
+		public KeyListenPanel(String option) {
+			super();
+			this.add(infoLabel);
+			this.option = option;
+			this.setSize(200, 100);
+			this.setVisible(true);
+			this.addListener();
+		}
+
+		private void addListener() {
+			this.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					keyList.add(KeyEvent.getKeyText(e.getKeyCode()));
+					
+				}
+			});
+		}
+	}
 
 	private void useSystemUI() {
 		try {
@@ -59,7 +91,7 @@ public class ConfigFrame extends JFrame {
 	}
 
 	private void init() {
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		setSize(392, 487);
 		setVisible(true);
 		this.setResizable(false);
@@ -116,14 +148,34 @@ public class ConfigFrame extends JFrame {
 		tab = new JTabbedPane();
 		uploadToLabel = new JLabel("上传到");
 
-		startWithSystemCheck = new JCheckBox("是否开机自启动");
+		startWithSystemCheck = new JCheckBox("开机自启动");
+		startWithSystemCheck.setSelected(config.isStartWithSystem());
+
+		showNotifyAfterUploadCheck = new JCheckBox("上传后显示通知");
+		showNotifyAfterUploadCheck.setSelected(config
+				.getShowNotifyAfterUpload());
+
+		playMusicAfterUploadCheck = new JCheckBox("上传后播放音乐");
+		playMusicAfterUploadCheck.setSelected(config.getPlayMusicAfterUpload());
+
 		saveAsTitleLabel = new JLabel("<html><strong>截图保存在</strong></html>");
 
-		fileNameFormatLabel = new JLabel("截图文件名格式");
+		fileNameFormatLabel = new JLabel(
+				"<html><strong>截图文件名格式</strong></html>");
+		fileNameFormatField = new JTextField();
+		fileNameFormatField.setText(config.getFileNameFormat());
 
-		fileNameFormatExampleLabel = new JLabel("实例:yyyy-MM-dd mm:ss的截图");
+		jpanel3 = new JPanel();
+		jpanel3.setLayout(null);
+		fullShotKeyLabel = new JLabel("全屏截图: ");
+		fullShotKeyButton = new JButton("点击设置");
+		fullShotKeyShowLabel = new JLabel();
 
-		
+		selectShotKeyLabel = new JLabel("选择截图: ");
+		selectShotKeyButton = new JButton("点击设置");
+		selectShotKeyShowLabel = new JLabel();
+
+		// serviceListTable = new JTable();
 	}
 
 	private void initButton() {
@@ -183,15 +235,29 @@ public class ConfigFrame extends JFrame {
 		gDriveAuthButton.setBounds(185, 145, 60, 30);
 		gDriveRemoveAuthButton.setBounds(250, 145, 60, 30);
 
-		imageCloudLabel.setBounds(40, 175, 60, 30);
-		imageCloudAuthLabel.setBounds(110, 175, 60, 30);
-		imageCloudAuthButton.setBounds(185, 175, 60, 30);
-		imageCloudRemoveAuthButton.setBounds(250, 175, 60, 30);
+		imageCloudLabel.setBounds(40, 180, 60, 30);
+		imageCloudAuthLabel.setBounds(110, 180, 60, 30);
+		imageCloudAuthButton.setBounds(185, 180, 60, 30);
+		imageCloudRemoveAuthButton.setBounds(250, 180, 60, 30);
 
-		startWithSystemCheck.setBounds(40, 190, 200, 30);
+		startWithSystemCheck.setBounds(40, 230, 200, 30);
 
 		saveAsTitleLabel.setBounds(10, 10, 190, 30);
 
+		fileNameFormatLabel.setBounds(10, 40, 300, 90);
+
+		fileNameFormatField.setBounds(40, 100, 200, 30);
+
+		playMusicAfterUploadCheck.setBounds(40, 150, 200, 30);
+
+		showNotifyAfterUploadCheck.setBounds(40, 190, 200, 30);
+
+		selectShotKeyLabel.setBounds(10, 30, 70, 30);
+		selectShotKeyButton.setBounds(80, 30, 80, 30);
+		selectShotKeyShowLabel.setBounds(160, 30, 100, 30);
+		fullShotKeyLabel.setBounds(10, 80, 70, 30);
+		fullShotKeyButton.setBounds(80, 80, 80, 30);
+		fullShotKeyShowLabel.setBounds(180, 80, 100, 30);
 	}
 
 	private JLabel savePathLabel;
@@ -228,15 +294,26 @@ public class ConfigFrame extends JFrame {
 
 	private JCheckBox startWithSystemCheck;
 
+	private JCheckBox showNotifyAfterUploadCheck;
+	private JCheckBox playMusicAfterUploadCheck;
+
 	private JTabbedPane tab;
 
 	private JLabel saveAsTitleLabel;
 
 	private JLabel fileNameFormatLabel;
 
-	private JLabel fileNameFormatExampleLabel;
-
 	private JTextField fileNameFormatField;
+
+	private JLabel fullShotKeyLabel;
+	private JButton fullShotKeyButton;
+	private JLabel fullShotKeyShowLabel;
+
+	private JLabel selectShotKeyLabel;
+	private JButton selectShotKeyButton;
+	private JLabel selectShotKeyShowLabel;
+
+	// private JTable serviceListTable;
 
 	private void addcomponents() {
 		setLayout(null);
@@ -271,16 +348,30 @@ public class ConfigFrame extends JFrame {
 		jpanel1.add(startWithSystemCheck);
 		jpanel1.add(saveAsTitleLabel);
 
-//		jpanel1.add(fileNameFormatLabel);
-//
-//		jpanel1.add(fileNameFormatExampleLabel);
-//
-//		jpanel1.add(fileNameFormatField);
-		
+		jpanel1.add(fileNameFormatLabel);
+
+		jpanel1.add(fileNameFormatField);
+
+		jpanel1.add(playMusicAfterUploadCheck);
+		jpanel1.add(showNotifyAfterUploadCheck);
+
+		jpanel3.add(fullShotKeyLabel);
+		jpanel3.add(fullShotKeyButton);
+		jpanel3.add(fullShotKeyShowLabel);
+
+		jpanel3.add(selectShotKeyLabel);
+		jpanel3.add(selectShotKeyButton);
+		jpanel3.add(selectShotKeyShowLabel);
+
 		add(tab);
 		tab.setTabPlacement(JTabbedPane.TOP);
 		tab.add("通常设置", jpanel1);
 		tab.add("连接网站", jpanel2);
+		tab.add("快捷键设置", jpanel3);
+		// TODO 快捷键设置的TAB
+		// TODO 关于，版本，自动升级的选项
+		// TODO 上传后显示托盘消息
+		// TODO 上传成功后播放音乐
 		tab.setBounds(5, 5, 382, 400);
 
 		add(okButton);
@@ -316,17 +407,17 @@ public class ConfigFrame extends JFrame {
 				dispose();
 			}
 		});
-		try {
-			UIManager
-					.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-		} catch (Exception e) {
-			System.out.println("Unable to set native look and feel: " + e);
-		}
 		okButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				config.setSavePath(savePathField.getText());
+				config.setFileNameFormat(fileNameFormatField.getText());
+				config.setStartWithSystem(startWithSystemCheck.isSelected());
+				config.setPlayMusicAfterUpload(playMusicAfterUploadCheck
+						.isSelected());
+				config.setShowNotifyAfterUpload(showNotifyAfterUploadCheck
+						.isSelected());
 				Object obj = uploadChoice.getSelectedItem();
 				if (obj != null)
 					config.setDefaultUpload((String) obj);
@@ -480,6 +571,13 @@ public class ConfigFrame extends JFrame {
 				uploadChoice.removeItem("imgCloud");
 			}
 		});
+		fullShotKeyButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				KeyListenPanel panel = new KeyListenPanel("full");
+			}
+		});
+
 	}
 
 	public ConfigFrame(Config config) {
