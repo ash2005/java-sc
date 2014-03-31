@@ -15,278 +15,312 @@ import java.util.Properties;
 import javax.swing.filechooser.FileSystemView;
 
 public class Config {
-    // Config save directory
-    private static final String CONFIG_DIR = ".SC-JAVA";
-    // Config file name
-    private static final String CONFIG_FILE = "config.properties";
+	// Config save directory
+	private static final String CONFIG_DIR = ".SC-JAVA";
+	// Config file name
+	private static final String CONFIG_FILE = "config.properties";
 
-    private File path;
-    private File propDir;
-    private File propFile;
-    private Properties properties;
-    private ImgurConfig imgurConfig;
-    private DropboxConfig dropboxConfig;
-    private GDriveConfig gdriveConfig;
-    private ImageCloudConfig imageCloudConfig;
+	private File path;
+	private File propDir;
+	private File propFile;
+	private Properties properties;
+	private ImgurConfig imgurConfig;
+	private DropboxConfig dropboxConfig;
+	private GDriveConfig gdriveConfig;
+	private ImageCloudConfig imageCloudConfig;
 
-    /**
-     * Open the directory where images in
-     */
-    @SuppressWarnings("unused")
-    private void openFolder() {
-        Desktop desktop = null;
-        if (Desktop.isDesktopSupported()) {
-            desktop = Desktop.getDesktop();
-        }
-        try {
-            desktop.open(new File(savePath));
-        } catch (IOException e) {
-        }
-    }
+	/**
+	 * Open the directory where images in
+	 */
+	@SuppressWarnings("unused")
+	private void openFolder() {
+		Desktop desktop = null;
+		if (Desktop.isDesktopSupported()) {
+			desktop = Desktop.getDesktop();
+		}
+		try {
+			desktop.open(new File(savePath));
+		} catch (IOException e) {
+		}
+	}
 
-    /**
-     * config转换成properties对象
-     * 
-     * @return 转换后的properties对象
-     */
-    public Properties getProperties() {
-        if (properties == null) {
-            properties = new Properties();
-        }
-        properties.setProperty("savePath", getSavePath());
-        properties.setProperty("defaultUpload", getDefaultUpload());
-        properties.setProperty("startWithSystem", isStartWithSystem()
-                .toString());
-        properties.setProperty("saveInDrive", isSaveInDrive().toString());
-        properties.setProperty("fileNameFormat", getFileNameFormat());
-        return properties;
-    }
+	/**
+	 * config转换成properties对象
+	 * 
+	 * @return 转换后的properties对象
+	 */
+	public Properties getProperties() {
+		if (properties == null) {
+			properties = new Properties();
+		}
+		properties.setProperty("savePath", getSavePath());
+		properties.setProperty("defaultUpload", getDefaultUpload());
+		properties.setProperty("startWithSystem", isStartWithSystem()
+				.toString());
+		properties.setProperty("saveInDrive", isSaveInDrive().toString());
+		properties.setProperty("fileNameFormat", getFileNameFormat());
+		properties.setProperty("showNotifyAfterUpload",
+				getShowNotifyAfterUpload().toString());
+		properties.setProperty("playMusicAfterUpload",
+				getPlayMusicAfterUpload().toString());
+		return properties;
+	}
 
-    private void init() {
-        // 先是初始化各个目录
-        path = FileSystemView.getFileSystemView().getHomeDirectory();
-        propDir = new File(path.getAbsolutePath() + File.separator + CONFIG_DIR);
-        propFile = new File(propDir.getAbsolutePath() + File.separator
-                + CONFIG_FILE);
-        // 不存在时创建
-        if (!propDir.exists()) {
-            propDir.mkdir();
-        }
-        if (!propFile.exists()) {
-            save();
-        }
-        // 读取prop设置
-        read();
-    }
+	private void init() {
+		// 先是初始化各个目录
+		path = FileSystemView.getFileSystemView().getHomeDirectory();
+		propDir = new File(path.getAbsolutePath() + File.separator + CONFIG_DIR);
+		propFile = new File(propDir.getAbsolutePath() + File.separator
+				+ CONFIG_FILE);
+		// 不存在时创建
+		if (!propDir.exists()) {
+			propDir.mkdir();
+		}
+		if (!propFile.exists()) {
+			save();
+		}
+		// 读取prop设置
+		read();
+	}
 
-    // 初始化
-    {
-        init();
-    }
+	// 初始化
+	{
+		init();
+	}
 
-    public Config() {
-    }
+	public Config() {
+	}
 
-    private String savePath;
+	private String savePath;
 
-    private String defaultUpload;
+	private String defaultUpload;
 
-    private String fileNameFormat;
+	private String fileNameFormat;
 
-    private Boolean startWithSystem;
+	private Boolean startWithSystem;
 
-    private Boolean saveInDrive;
+	private Boolean saveInDrive;
 
-    /**
-     * 获取保存路径
-     * 
-     * @return 保存路径 当其为空时使用默认目录
-     */
-    public String getSavePath() {
-        if (savePath == null) {
-            savePath = propDir.getAbsolutePath();
-        }
-        return savePath;
-    }
+	private Boolean playMusicAfterUpload;
 
-    public void setSavePath(String savePath) {
-        this.savePath = savePath;
-    }
+	public Boolean getPlayMusicAfterUpload() {
+		if (playMusicAfterUpload == null) {
+			playMusicAfterUpload = true;
+		}
+		return playMusicAfterUpload;
+	}
 
-    /**
-     * 保存设置
-     */
-    public void save() {
-        properties = getProperties();
-        FileOutputStream output = null;
-        try {
-            output = new FileOutputStream(propFile);
-            properties.store(output, null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+	public void setPlayMusicAfterUpload(Boolean playMusicAfterUpload) {
+		this.playMusicAfterUpload = playMusicAfterUpload;
+	}
 
-    /**
-     * 读取prop设置
-     */
-    public void read() {
-        properties = getProperties();
-        InputStream in = null;
-        try {
-            in = new BufferedInputStream(new FileInputStream(propFile));
-            properties.load(in);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (in != null)
-                    in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        this.setSavePath(properties.getProperty("savePath"));
-        this.setFileNameFormat(properties.getProperty("fileNameFormat"));
-        this.setDefaultUpload(properties.getProperty("defaultUpload"));
-        this.setSaveInDrive(Boolean.parseBoolean(properties
-                .getProperty("saveInDrive")));
-        this.setStartWithSystem(Boolean.parseBoolean(properties
-                .getProperty("startWithSystem")));
-        // imgurConfig
-        if (properties.getProperty("imgur.date") != null) {
-            imgurConfig = new ImgurConfig();
-            try {
-                imgurConfig.setDate(new SimpleDateFormat("yyyyMMddHHmmss")
-                        .parse(properties.getProperty("imgur.date")));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            imgurConfig.setRefreshToken(properties
-                    .getProperty("imgur.refreshToken"));
-            imgurConfig.setAccessToken(properties
-                    .getProperty("imgur.accessToken"));
-        }
-        if (properties.getProperty("dropbox.uid") != null) {
-            dropboxConfig = new DropboxConfig();
-            dropboxConfig.setAccessToken(properties
-                    .getProperty("dropbox.accessToken"));
-            dropboxConfig.setUid(properties.getProperty("dropbox.uid"));
-        }
-        if (properties.getProperty("gdrive.accessToken") != null) {
-            gdriveConfig = new GDriveConfig();
-            gdriveConfig.setAccessToken(properties
-                    .getProperty("gdrive.accessToken"));
-            gdriveConfig.setRefreshToken(properties
-                    .getProperty("gdrive.refreshToken"));
-        }
-        if (properties.getProperty("imageCloud.email") != null) {
-            imageCloudConfig = new ImageCloudConfig();
-            imageCloudConfig.setEmail(properties
-                    .getProperty("imageCloud.email"));
-            imageCloudConfig.setToken(properties
-                    .getProperty("imageCloud.token"));
-        }
-    }
+	public Boolean getShowNotifyAfterUpload() {
+		if (showNotifyAfterUpload == null) {
+			showNotifyAfterUpload = true;
+		}
+		return showNotifyAfterUpload;
+	}
 
-    public ImgurConfig getImgurConfig() {
-        if (imgurConfig == null) {
-            imgurConfig = new ImgurConfig();
-        }
-        return imgurConfig;
-    }
+	public void setShowNotifyAfterUpload(Boolean showNotifyAfterUpload) {
+		this.showNotifyAfterUpload = showNotifyAfterUpload;
+	}
 
-    public void setImgurConfig(ImgurConfig imgurConfig) {
-        this.imgurConfig = imgurConfig;
-    }
+	private Boolean showNotifyAfterUpload;
 
-    public DropboxConfig getDropboxConfig() {
-        if (dropboxConfig == null) {
-            dropboxConfig = new DropboxConfig();
-        }
-        return dropboxConfig;
-    }
+	/**
+	 * 获取保存路径
+	 * 
+	 * @return 保存路径 当其为空时使用默认目录
+	 */
+	public String getSavePath() {
+		if (savePath == null) {
+			savePath = propDir.getAbsolutePath();
+		}
+		return savePath;
+	}
 
-    public void setDropboxConfig(DropboxConfig dropboxConfig) {
-        this.dropboxConfig = dropboxConfig;
-    }
+	public void setSavePath(String savePath) {
+		this.savePath = savePath;
+	}
 
-    public String getDefaultUpload() {
-        if (defaultUpload == null) {
-            defaultUpload = "";
-        }
-        return defaultUpload;
-    }
+	/**
+	 * 保存设置
+	 */
+	public void save() {
+		properties = getProperties();
+		FileOutputStream output = null;
+		try {
+			output = new FileOutputStream(propFile);
+			properties.store(output, null);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (output != null) {
+				try {
+					output.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 
-    public void setDefaultUpload(String defaultUpload) {
-        this.defaultUpload = defaultUpload;
-    }
+	/**
+	 * 读取prop设置
+	 */
+	public void read() {
+		properties = getProperties();
+		InputStream in = null;
+		try {
+			in = new BufferedInputStream(new FileInputStream(propFile));
+			properties.load(in);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (in != null)
+					in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		this.setSavePath(properties.getProperty("savePath"));
+		this.setFileNameFormat(properties.getProperty("fileNameFormat"));
+		this.setDefaultUpload(properties.getProperty("defaultUpload"));
+		this.setSaveInDrive(Boolean.parseBoolean(properties
+				.getProperty("saveInDrive")));
+		this.setStartWithSystem(Boolean.parseBoolean(properties
+				.getProperty("startWithSystem")));
+		this.setPlayMusicAfterUpload(Boolean.parseBoolean(properties
+				.getProperty("playMusicAfterUpload")));
+		this.setShowNotifyAfterUpload(Boolean.parseBoolean(properties
+				.getProperty("showNotifyAfterUpload")));
+		// imgurConfig
+		if (properties.getProperty("imgur.date") != null) {
+			imgurConfig = new ImgurConfig();
+			try {
+				imgurConfig.setDate(new SimpleDateFormat("yyyyMMddHHmmss")
+						.parse(properties.getProperty("imgur.date")));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			imgurConfig.setRefreshToken(properties
+					.getProperty("imgur.refreshToken"));
+			imgurConfig.setAccessToken(properties
+					.getProperty("imgur.accessToken"));
+		}
+		if (properties.getProperty("dropbox.uid") != null) {
+			dropboxConfig = new DropboxConfig();
+			dropboxConfig.setAccessToken(properties
+					.getProperty("dropbox.accessToken"));
+			dropboxConfig.setUid(properties.getProperty("dropbox.uid"));
+		}
+		if (properties.getProperty("gdrive.accessToken") != null) {
+			gdriveConfig = new GDriveConfig();
+			gdriveConfig.setAccessToken(properties
+					.getProperty("gdrive.accessToken"));
+			gdriveConfig.setRefreshToken(properties
+					.getProperty("gdrive.refreshToken"));
+		}
+		if (properties.getProperty("imageCloud.email") != null) {
+			imageCloudConfig = new ImageCloudConfig();
+			imageCloudConfig.setEmail(properties
+					.getProperty("imageCloud.email"));
+			imageCloudConfig.setToken(properties
+					.getProperty("imageCloud.token"));
+		}
+	}
 
-    public GDriveConfig getGdriveConfig() {
-        if (gdriveConfig == null) {
-            gdriveConfig = new GDriveConfig();
-        }
-        return gdriveConfig;
-    }
+	public ImgurConfig getImgurConfig() {
+		if (imgurConfig == null) {
+			imgurConfig = new ImgurConfig();
+		}
+		return imgurConfig;
+	}
 
-    public void setGdriveConfig(GDriveConfig gdriveConfig) {
-        this.gdriveConfig = gdriveConfig;
-    }
+	public void setImgurConfig(ImgurConfig imgurConfig) {
+		this.imgurConfig = imgurConfig;
+	}
 
-    public ImageCloudConfig getImageCloudConfig() {
-        if (imageCloudConfig == null) {
-            imageCloudConfig = new ImageCloudConfig();
-        }
-        return imageCloudConfig;
-    }
+	public DropboxConfig getDropboxConfig() {
+		if (dropboxConfig == null) {
+			dropboxConfig = new DropboxConfig();
+		}
+		return dropboxConfig;
+	}
 
-    public void setImageCloudConfig(ImageCloudConfig imageCloudConfig) {
-        this.imageCloudConfig = imageCloudConfig;
-    }
+	public void setDropboxConfig(DropboxConfig dropboxConfig) {
+		this.dropboxConfig = dropboxConfig;
+	}
 
-    public String getFileNameFormat() {
-        if(fileNameFormat==null){
-            fileNameFormat = "yyyy-MM-dd mm:ss的屏幕截图";
-        }
-        return fileNameFormat;
-    }
+	public String getDefaultUpload() {
+		if (defaultUpload == null) {
+			defaultUpload = "";
+		}
+		return defaultUpload;
+	}
 
-    public void setFileNameFormat(String fileDescFormat) {
-        this.fileNameFormat = fileDescFormat;
-    }
+	public void setDefaultUpload(String defaultUpload) {
+		this.defaultUpload = defaultUpload;
+	}
 
-    public Boolean isStartWithSystem() {
-        if (startWithSystem == null) {
-            startWithSystem = true;
-        }
-        return startWithSystem;
-    }
+	public GDriveConfig getGdriveConfig() {
+		if (gdriveConfig == null) {
+			gdriveConfig = new GDriveConfig();
+		}
+		return gdriveConfig;
+	}
 
-    public void setStartWithSystem(boolean startWithSystem) {
-        this.startWithSystem = startWithSystem;
-    }
+	public void setGdriveConfig(GDriveConfig gdriveConfig) {
+		this.gdriveConfig = gdriveConfig;
+	}
 
-    public Boolean isSaveInDrive() {
-        if (saveInDrive == null) {
-            saveInDrive = true;
-        }
-        return saveInDrive;
-    }
+	public ImageCloudConfig getImageCloudConfig() {
+		if (imageCloudConfig == null) {
+			imageCloudConfig = new ImageCloudConfig();
+		}
+		return imageCloudConfig;
+	}
 
-    public void setSaveInDrive(boolean saveInDrive) {
-        this.saveInDrive = saveInDrive;
-    }
+	public void setImageCloudConfig(ImageCloudConfig imageCloudConfig) {
+		this.imageCloudConfig = imageCloudConfig;
+	}
+
+	public String getFileNameFormat() {
+		if (fileNameFormat == null) {
+			fileNameFormat = "yyyy-MM-dd HH:mm:ss的屏幕截图";
+		}
+		return fileNameFormat;
+	}
+
+	public void setFileNameFormat(String fileDescFormat) {
+		this.fileNameFormat = fileDescFormat;
+	}
+
+	public Boolean isStartWithSystem() {
+		if (startWithSystem == null) {
+			startWithSystem = true;
+		}
+		return startWithSystem;
+	}
+
+	public void setStartWithSystem(boolean startWithSystem) {
+		this.startWithSystem = startWithSystem;
+	}
+
+	public Boolean isSaveInDrive() {
+		if (saveInDrive == null) {
+			saveInDrive = true;
+		}
+		return saveInDrive;
+	}
+
+	public void setSaveInDrive(boolean saveInDrive) {
+		this.saveInDrive = saveInDrive;
+	}
 
 }

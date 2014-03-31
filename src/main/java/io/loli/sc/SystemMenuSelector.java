@@ -1,6 +1,5 @@
 package io.loli.sc;
 
-import io.loli.sc.ui.qt.QtSystemMenu;
 import io.loli.sc.ui.swing.SwingSystemMenu;
 
 /**
@@ -17,13 +16,11 @@ public class SystemMenuSelector {
     public static void main(String[] args) {
         /**
          * 根据系统类型来决定使用哪个Menu实现类 <br/>
-         * Windows下使用Swing <br/>
-         * Linux下使用QT <br/>
-         * Mac下暂时使用Swing <br/>
+         * 现在全部使用Swing
          */
         String osname = System.getProperty("os.name").toLowerCase();
         if (osname.indexOf("linux") >= 0) {
-            menu = new QtSystemMenu();
+            menu = new SwingSystemMenu();
         } else if (osname.indexOf("windows") >= 0) {
             menu = new SwingSystemMenu();
         } else if (osname.indexOf("mac") >= 0) {

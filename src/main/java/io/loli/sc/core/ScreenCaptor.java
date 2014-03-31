@@ -94,7 +94,7 @@ public class ScreenCaptor {
     }
 
     private File saveImageToFile(BufferedImage img) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat(config.getFileNameFormat());
         String name = sdf.format(new Date());
         File f = new File(config.getSavePath() + File.separator + name + ".png");
         try {
