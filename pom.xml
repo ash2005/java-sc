@@ -126,25 +126,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>qtjambi</groupId>
-			<artifactId>gcc</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>/home/choco/soft/jar/qtjambi/jambi-gcc.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>qtjambi</groupId>
-			<artifactId>core</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>/home/choco/soft/jar/qtjambi/jambi-core.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>qtjambi</groupId>
-			<artifactId>util</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>/home/choco/soft/jar/qtjambi/jambi-util.jar</systemPath>
+			<groupId>com.github.taksan</groupId>
+			<artifactId>native-tray-adapter</artifactId>
+			<version>1.1</version>
 		</dependency>
 		<!-- <dependency> <groupId>com.melloware</groupId> <artifactId>jintellitype</artifactId> 
 			<version>1.3.7</version> </dependency> -->
@@ -206,7 +190,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>io.loli.sc.SystemMenu</mainClass>
+							<mainClass>io.loli.sc.SystemMenuSelector</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
