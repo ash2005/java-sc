@@ -1,4 +1,4 @@
-package io.loli.sc;
+package io.loli.sc.ui;
 
 /**
  * 系统托盘菜单抽象接口<br/>

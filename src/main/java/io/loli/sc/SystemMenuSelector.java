@@ -1,5 +1,6 @@
 package io.loli.sc;
 
+import io.loli.sc.ui.SystemMenu;
 import io.loli.sc.ui.swing.SwingSystemMenu;
 
 /**

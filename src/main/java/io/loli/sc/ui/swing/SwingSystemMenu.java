@@ -1,13 +1,20 @@
 package io.loli.sc.ui.swing;
 
-import io.loli.sc.SystemMenu;
+import io.loli.sc.ui.SystemMenu;
 
+import java.awt.AWTException;
+import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.URL;
+
+import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 
 import tray.SystemTrayAdapter;
 import tray.SystemTrayProvider;
@@ -38,6 +45,7 @@ public class SwingSystemMenu implements SystemMenu {
     }
 
     private ActionListener listener;
+    private TrayIcon trayIcon;
 
     @Override
     public void run() {
@@ -62,15 +70,38 @@ public class SwingSystemMenu implements SystemMenu {
                 }
             };
 
-            SystemTrayAdapter trayAdapter = new SystemTrayProvider()
-                    .getSystemTray();
-            URL imageUrl = ClassLoader.getSystemResource("icon.png");
-            String tooltip = "ImageCloud";
-            trayAdapter.createAndAddTrayIcon(imageUrl, tooltip,
-                    this.generateMenu());
+            String osname = System.getProperty("os.name").toLowerCase();
+            if (osname.indexOf("linux") >= 0) {
+                SystemTrayAdapter trayAdapter = new SystemTrayProvider()
+                        .getSystemTray();
+                URL imageUrl = ClassLoader.getSystemResource("icon.png");
+                String tooltip = "ImageCloud";
+                trayAdapter.createAndAddTrayIcon(imageUrl, tooltip,
+                        this.generateMenu());
+            } else {
+                SystemTray tray = SystemTray.getSystemTray();
+                // 系统托盘对象
+                Image image = null;
+                try {
+                    image = ImageIO.read(ClassLoader
+                            .getSystemResourceAsStream("icon.png"));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                trayIcon = new TrayIcon(image, "sc-java", this.generateMenu());
+                trayIcon.setImageAutoSize(true);
+                trayIcon.addActionListener(listener);
+                try {
+                    tray.add(trayIcon);
+                } catch (AWTException e) {
+                    System.err.println(e);
+                }
+            }
+
         } else {
+            JOptionPane.showMessageDialog(null,
+                    "your system do not support system tray");
         }
 
     }
-
 }
