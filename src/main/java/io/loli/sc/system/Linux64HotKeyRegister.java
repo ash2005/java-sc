@@ -1,20 +1,33 @@
 package io.loli.sc.system;
 
-import java.awt.event.KeyEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jxgrabkey.HotkeyConflictException;
+import jxgrabkey.HotkeyListener;
 import jxgrabkey.JXGrabKey;
 
-public class Linux64HotKey {
+public class Linux64HotKeyRegister implements HotKeyRegister {
     {
         // Load JXGrabKey lib
         System.load(ClassLoader.getSystemResource("libJXGrabKey.so").getFile());
     }
-    private static final int MY_HOTKEY_INDEX = 1;
     // 加上瞬时关键字以支持并发访问
     private transient boolean canStop = false;
+
+    /**
+     * 构造方法
+     * 
+     * @param task
+     *            在监听到按键时需要执行的方法
+     */
+    public Linux64HotKeyRegister(HotKeyTask task) {
+        this.task = task;
+    }
+
+    private JXGrabKey getHotkey() {
+        return JXGrabKey.getInstance();
+    }
 
     /**
      * 判断是否能注册此快捷键
@@ -25,27 +38,35 @@ public class Linux64HotKey {
      *            数值键
      * @return 是否能注册此快捷键
      */
-    public static boolean canRegister(int mask, int key) {
+    @SuppressWarnings("finally")
+    public synchronized boolean canRegister(int index, int mask, int key) {
         boolean canRegist = false;
         try {
-            JXGrabKey.getInstance().registerAwtHotkey(MY_HOTKEY_INDEX, mask,
-                    key);
+            getHotkey().registerAwtHotkey(index, mask, key);
+            getHotkey().addHotkeyListener(new HotkeyListener() {
+                @Override
+                public void onHotkey(int arg0) {
+                }
+            });
             canRegist = true;
+
         } catch (HotkeyConflictException e) {
+            canRegist = false;
         } finally {
-            JXGrabKey.getInstance().unregisterHotKey(MY_HOTKEY_INDEX);
-            JXGrabKey.getInstance().cleanUp();
+            this.stop(index);
+            return canRegist;
         }
-        return canRegist;
+
     }
 
+    // 执行线程用的线程池
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     /**
      * 监听任务，当快捷键被触发时应该执行onHotKey方法
      * 
      * @author choco
-     *
+     * 
      */
     class CustomHotkeyListener implements jxgrabkey.HotkeyListener {
         private HotKeyTask task;
@@ -59,10 +80,26 @@ public class Linux64HotKey {
          * 当快捷键被触发时执行此方法，任务在新线程中启动
          */
         @Override
-        public void onHotkey(int arg0) {
-            executor.execute(new TaskRunnable(task));
+        public void onHotkey(int index) {
+            executor.execute(new TaskRunnable(index, task));
         }
 
+    }
+
+    private HotKeyTask task;
+
+    public HotKeyRegister setTask(HotKeyTask task) {
+        this.task = task;
+        return this;
+    }
+
+    /**
+     * 开始监听按键
+     */
+    @Override
+    public void startListen() {
+        getHotkey().addHotkeyListener(new CustomHotkeyListener(task));
+        listen();
     }
 
     /**
@@ -75,18 +112,13 @@ public class Linux64HotKey {
      * @param task
      *            需要执行的task
      */
-    public void register(int mask, int key, final HotKeyTask task) {
+    public void register(int index, int mask, int key) {
+        canStop = false;
         try {
-            JXGrabKey.getInstance().registerAwtHotkey(MY_HOTKEY_INDEX, mask,
-                    key);
-
-            // Add HotkeyListener
-            JXGrabKey.getInstance().addHotkeyListener(
-                    new CustomHotkeyListener(task));
-            executor.execute(new ListenRunnable());
+            getHotkey().registerAwtHotkey(index, mask, key);
         } catch (HotkeyConflictException e) {
-            JXGrabKey.getInstance().unregisterHotKey(MY_HOTKEY_INDEX);
-            JXGrabKey.getInstance().cleanUp();
+            e.printStackTrace();
+            this.stop(index);
         }
     }
 
@@ -94,9 +126,9 @@ public class Linux64HotKey {
      * 后台等待线程
      * 
      * @author choco
-     *
+     * 
      */
-    class ListenRunnable implements Runnable {
+    class ListenRunnable extends Thread {
 
         @Override
         public void run() {
@@ -122,10 +154,10 @@ public class Linux64HotKey {
     /**
      * 监听程序停止，并取消快捷键注册
      */
-    public void stop() {
+    public void stop(int index) {
         canStop = true;
-        JXGrabKey.getInstance().unregisterHotKey(MY_HOTKEY_INDEX);
-        JXGrabKey.getInstance().cleanUp();
+        getHotkey().unregisterHotKey(index);
+        getHotkey().cleanUp();
         executor.shutdown();
     }
 
@@ -133,36 +165,22 @@ public class Linux64HotKey {
      * 运行任务的Runnable，在新线程中执行task.run()方法
      * 
      * @author choco
-     *
+     * 
      */
-    class TaskRunnable implements Runnable {
+    class TaskRunnable extends Thread {
         private HotKeyTask task;
+        private int index;
 
-        TaskRunnable(HotKeyTask task) {
+        TaskRunnable(int index, HotKeyTask task) {
             super();
             this.task = task;
+            this.index = index;
         }
 
         @Override
         public void run() {
-            task.run();
+            task.run(index);
         }
 
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        Linux64HotKey key = new Linux64HotKey();
-
-        key.register(KeyEvent.CTRL_MASK | KeyEvent.ALT_MASK, KeyEvent.VK_1,
-                new HotKeyTask() {
-
-                    @Override
-                    public void run() {
-                        System.out.println("test");
-                    }
-
-                });
-        Thread.sleep(10000);
-        key.stop();
     }
 }

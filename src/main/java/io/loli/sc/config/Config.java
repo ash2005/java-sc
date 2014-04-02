@@ -1,6 +1,7 @@
 package io.loli.sc.config;
 
 import java.awt.Desktop;
+import java.awt.event.KeyEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +29,51 @@ public class Config {
     private DropboxConfig dropboxConfig;
     private GDriveConfig gdriveConfig;
     private ImageCloudConfig imageCloudConfig;
+
+    /**
+     * 返回截图的快捷键信息
+     * 
+     * @return 数组，第一个为mask，第二个为键
+     */
+    public int[] getHotKeys(String option) {
+        String[] ss = null;
+        if (option.equals("select")) {
+            ss = this.getSelectHotKey().split(",");
+        } else if (option.equals("full")) {
+            ss = this.getFullHotKey().split(",");
+        }
+        int[] result = new int[2];
+        if (ss.length == 2) {
+
+            result[0] = keyToMask(Integer.parseInt(ss[0]));
+            result[1] = Integer.parseInt(ss[1]);
+        } else if (ss.length == 3) {
+            result[0] = keyToMask(Integer.parseInt(ss[0]))
+                    | keyToMask(Integer.parseInt(ss[1]));
+            result[1] = Integer.parseInt(ss[2]);
+        }
+        return result;
+    }
+
+    /**
+     * 将key code转化为mask code
+     * 
+     * @param key
+     * @return
+     */
+    private int keyToMask(int key) {
+        if (key == KeyEvent.VK_CONTROL) {
+            return KeyEvent.CTRL_MASK;
+        } else if (key == KeyEvent.VK_ALT) {
+            return KeyEvent.ALT_MASK;
+        } else if (key == KeyEvent.VK_SHIFT) {
+            return KeyEvent.SHIFT_MASK;
+        } else if (key == KeyEvent.VK_META) {
+            return KeyEvent.META_MASK;
+        } else {
+            return 0;
+        }
+    }
 
     /**
      * Open the directory where images in

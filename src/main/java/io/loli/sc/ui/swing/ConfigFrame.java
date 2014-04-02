@@ -1,5 +1,6 @@
 package io.loli.sc.ui.swing;
 
+import io.loli.sc.SystemMenuSelector;
 import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
@@ -15,6 +16,8 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -35,6 +38,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.apache.commons.lang.StringUtils;
+
 public class ConfigFrame extends JFrame {
     private JPanel jpanel1;
     private JPanel jpanel2;
@@ -49,14 +54,16 @@ public class ConfigFrame extends JFrame {
         private Set<String> keyList = new LinkedHashSet<String>();
         private Set<String> tempKeyList = new LinkedHashSet<String>();
         private JButton okButton = new JButton("确认");
+        private Set<Integer> keyIntSet = new LinkedHashSet<Integer>();
+        private String hotkeyStr;
 
         public KeyListenPanel(String option) {
             super();
             this.setLayout(null);
             this.add(infoLabel);
             this.add(okButton);
-            infoLabel.setBounds(40, 10, 160, 30);
-            okButton.setBounds(40, 43, 100, 30);
+            infoLabel.setBounds(40, 5, 160, 30);
+            okButton.setBounds(40, 40, 100, 30);
             this.option = option;
             this.setSize(200, 110);
 
@@ -70,6 +77,39 @@ public class ConfigFrame extends JFrame {
             okButton.setEnabled(false);
             this.setVisible(true);
             this.requestFocus();
+        }
+
+        private boolean checkBind() {
+            StringBuilder sb = new StringBuilder();
+            boolean result = true;
+            if (keyIntSet.size() < 2) {
+                sb.append("请按两个或两个以上的键");
+                result = false;
+            }
+            if (!keyIntSet.contains(KeyEvent.VK_CONTROL)
+                    && !keyIntSet.contains(KeyEvent.VK_META)
+                    && !keyIntSet.contains(KeyEvent.VK_ALT)
+                    && !keyIntSet.contains(KeyEvent.SHIFT_MASK)) {
+                sb.append("请包含ctrl(meta),alt,shift中的至少一个");
+                result = false;
+            }
+            if (!keyIntSet.contains(KeyEvent.VK_WINDOWS)) {
+                sb.append("不能包含Windows键");
+                result = false;
+            }
+            Iterator<Integer> itr = keyIntSet.iterator();
+            int count = 0;
+            while (itr.hasNext()) {
+                int i = itr.next();
+                if (i != KeyEvent.VK_CONTROL && i != KeyEvent.VK_ALT
+                        && i != KeyEvent.VK_SHIFT && i != KeyEvent.VK_META) {
+                    count++;
+                }
+            }
+            if (count != 1) {
+                sb.append("只能含有一个数值键");
+            }
+            return false;
         }
 
         private void addListener() {
@@ -106,14 +146,20 @@ public class ConfigFrame extends JFrame {
                     }
                     keyList.add(KeyEvent.getKeyText(e.getKeyCode()));
                     tempKeyList.add(KeyEvent.getKeyText(e.getKeyCode()));
+                    keyIntSet.add(e.getKeyCode());
                     StringBuilder sb = new StringBuilder();
+                    StringBuilder sb2 = new StringBuilder();
                     Iterator<String> itr = keyList.iterator();
+                    Iterator<Integer> itr2 = keyIntSet.iterator();
                     for (int i = 0; itr.hasNext(); i++) {
                         sb.append(itr.next());
+                        sb2.append(itr2.next());
                         if (i != keyList.size() - 1) {
                             sb.append("+");
+                            sb2.append(",");
                         }
                     }
+                    hotkeyStr = sb2.toString();
                     infoLabel.setText(sb.toString());
                     lastReleaseKey = null;
                 }
@@ -129,12 +175,11 @@ public class ConfigFrame extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (option.equals("select")) {
-                        config.setSelectHotKey(infoLabel.getText());
+                        config.setSelectHotKey(hotkeyStr);
                         selectShotKeyShowLabel.setText(infoLabel.getText());
                     } else {
-                        config.setFullHotKey(infoLabel.getText());
+                        config.setFullHotKey(hotkeyStr);
                         fullShotKeyShowLabel.setText(infoLabel.getText());
-
                     }
                     dispose();
                 }
@@ -170,7 +215,7 @@ public class ConfigFrame extends JFrame {
     }
 
     private void initFatherFrame() {
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(392, 487);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         final int WIDTH = screenSize.width;
@@ -253,12 +298,31 @@ public class ConfigFrame extends JFrame {
         jpanel3.setLayout(null);
         fullShotKeyLabel = new JLabel("全屏截图: ");
         fullShotKeyButton = new JButton("点击设置");
-        fullShotKeyShowLabel = new JLabel(config.getFullHotKey());
+        fullShotKeyShowLabel = new JLabel(StringUtils.join(
+                new ArrayList<String>() {
+                    private static final long serialVersionUID = 4083852950428261739L;
+
+                    {
+                        for (String s : Arrays.asList(config.getFullHotKey()
+                                .split(","))) {
+                            add(KeyEvent.getKeyText(Integer.parseInt(s)));
+                        }
+                    }
+                }, "+"));
 
         selectShotKeyLabel = new JLabel("选择截图: ");
         selectShotKeyButton = new JButton("点击设置");
-        selectShotKeyShowLabel = new JLabel(config.getSelectHotKey());
+        selectShotKeyShowLabel = new JLabel(StringUtils.join(
+                new ArrayList<String>() {
+                    private static final long serialVersionUID = 4083852950428261739L;
 
+                    {
+                        for (String s : Arrays.asList(config.getSelectHotKey()
+                                .split(","))) {
+                            add(KeyEvent.getKeyText(Integer.parseInt(s)));
+                        }
+                    }
+                }, "+"));
         // serviceListTable = new JTable();
     }
 
@@ -489,6 +553,7 @@ public class ConfigFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
+                setVisible(false);
                 dispose();
             }
         });
@@ -508,6 +573,7 @@ public class ConfigFrame extends JFrame {
                     config.setDefaultUpload((String) obj);
                 config.save();
                 dispose();
+                new SystemMenuSelector().restart();
             }
 
         });
