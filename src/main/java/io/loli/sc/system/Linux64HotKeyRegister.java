@@ -53,7 +53,7 @@ public class Linux64HotKeyRegister implements HotKeyRegister {
         } catch (HotkeyConflictException e) {
             canRegist = false;
         } finally {
-            this.stop(index);
+            this.stop();
             return canRegist;
         }
 
@@ -118,7 +118,7 @@ public class Linux64HotKeyRegister implements HotKeyRegister {
             getHotkey().registerAwtHotkey(index, mask, key);
         } catch (HotkeyConflictException e) {
             e.printStackTrace();
-            this.stop(index);
+            this.stop();
         }
     }
 
@@ -154,9 +154,8 @@ public class Linux64HotKeyRegister implements HotKeyRegister {
     /**
      * 监听程序停止，并取消快捷键注册
      */
-    public void stop(int index) {
+    public void stop() {
         canStop = true;
-        getHotkey().unregisterHotKey(index);
         getHotkey().cleanUp();
         executor.shutdown();
     }

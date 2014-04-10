@@ -215,7 +215,7 @@ public class ConfigFrame extends JFrame {
     }
 
     private void initFatherFrame() {
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setSize(392, 487);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         final int WIDTH = screenSize.width;
@@ -554,7 +554,6 @@ public class ConfigFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                dispose();
             }
         });
         okButton.addActionListener(new ActionListener() {
@@ -572,8 +571,8 @@ public class ConfigFrame extends JFrame {
                 if (obj != null)
                     config.setDefaultUpload((String) obj);
                 config.save();
-                dispose();
-                new SystemMenuSelector().restart();
+                SystemMenuSelector.restart();
+                setVisible(false);
             }
 
         });

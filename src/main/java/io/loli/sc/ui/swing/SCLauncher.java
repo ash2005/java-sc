@@ -14,12 +14,18 @@ import java.io.IOException;
 import javax.swing.SwingUtilities;
 
 public class SCLauncher {
+    private static ConfigFrame configFrame;
+
     public static void launch(final String type) {
         switch (type) {
         case "option":
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    new ConfigFrame(new Config());
+                    if (configFrame == null) {
+                        configFrame = new ConfigFrame(new Config());
+                    } else {
+                        configFrame.setVisible(true);
+                    }
                 }
             });
 

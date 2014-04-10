@@ -48,6 +48,7 @@ public class SystemMenuSelector {
     }
 
     public static void main(String[] args) {
+        showMenu();
         startup();
     }
 
@@ -70,7 +71,7 @@ public class SystemMenuSelector {
         }
     }
 
-    public static void startup() {
+    public static void showMenu() {
         // 托盘菜单线程
         executor.execute(new Thread() {
             @Override
@@ -80,16 +81,18 @@ public class SystemMenuSelector {
             }
         });
 
+    }
+
+    public static void startup() {
         // 后台监听注册快捷键线程
+        if (executor.isShutdown()) {
+            executor = Executors.newCachedThreadPool();
+        }
         executor.execute(new OptionRunnable());
 
     }
 
     public static void shutdown() {
-        for (HotKeyRegister register : registerList) {
-            register.stop(0);
-            register.stop(1);
-        }
         executor.shutdown();
     }
 
