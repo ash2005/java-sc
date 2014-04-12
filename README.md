@@ -6,13 +6,12 @@ A screenshot program written in java
 
 --------------
 
-###Run###
+0.0.1-RELEASE has bean released
 
-
-
+Windows version can be found at https://github.com/chocotan/java-sc/releases
+Linux version can be build from java sources using maven:
 ```
-mvn package
-mvn assembly:assembly
-cd target
-java -jar io.loli.sc-jar-with-dependencies.jar
+mvn clean package assembly:assembly
+java -jar target/io.loli.sc-jar-with-dependencies.jar 
 ```
+Mac version is under development
