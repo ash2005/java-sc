@@ -51,41 +51,49 @@
             <groupId>com.googlecode.soundlibs</groupId>
             <artifactId>mp3spi</artifactId>
             <version>1.9.5-1</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.melloware</groupId>
             <artifactId>jintellitype</artifactId>
             <version>1.3.9</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.3.1</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.8</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>
             <version>1.9.13</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.9.13</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>2.3.0</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
             <version>4.3.1</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.dropbox.core</groupId>
@@ -97,21 +105,25 @@
                     <artifactId>jackson-core</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-drive</artifactId>
             <version>v2-rev105-1.17.0-rc</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-oauth2</artifactId>
             <version>v2-rev51-1.16.0-rc</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-jackson</artifactId>
             <version>1.17.0-rc</version>
+            <scope>complie</scope>
         </dependency>
         <!-- <dependency> <groupId>org.glassfish.grizzly</groupId> <artifactId>grizzly-framework</artifactId> 
             <version>2.3.5</version> </dependency> <dependency> <groupId>org.glassfish.grizzly</groupId> 
@@ -122,23 +134,27 @@
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client-extensions</artifactId>
             <version>1.6.0-beta</version>
+            <scope>complie</scope>
         </dependency>
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client-jackson2</artifactId>
             <version>1.17.0-rc</version>
+            <scope>complie</scope>
         </dependency>
         <!-- system tray in linux -->
         <dependency>
             <groupId>com.github.taksan</groupId>
             <artifactId>native-tray-adapter</artifactId>
             <version>1.1</version>
+            <scope>complie</scope>
         </dependency>
         <!-- register hot key -->
         <dependency>
             <groupId>com.melloware</groupId>
             <artifactId>jintellitype</artifactId>
             <version>1.3.9</version>
+            <scope>complie</scope>
         </dependency>
         <!-- <dependency> <groupId>com.melloware</groupId> <artifactId>jintellitype</artifactId> 
             <version>1.3.7</version> </dependency> -->
@@ -193,6 +209,14 @@
                 </executions>
                 <configuration>
                     <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.0</version>
+                <configuration>
+                    <remoteTagging>false</remoteTagging>
+                    <suppressCommitBeforeTag>true</suppressCommitBeforeTag>
                 </configuration>
             </plugin>
             <plugin>
