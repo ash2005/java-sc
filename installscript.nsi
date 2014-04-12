@@ -8,11 +8,9 @@
 
 ;--------------------------------
 ;General
-
-  
-  
-
-  ;Name and file
+ 
+  !define MUI_ICON "C:\Users\ちよこ\Desktop\output\icon.ico"
+ ;Name and file
   Name "云图"
   OutFile "screen-installer.exe"
 
@@ -20,7 +18,7 @@
   InstallDir "$PROGRAMFILES\SCREEN.PICS\screen"
   
   ;Get installation folder from registry if available
-  InstallDirRegKey HKCU "Software\Modern UI Test" ""
+  InstallDirRegKey HKCU "Software\SCREEN.PICS" ""
 
   ;Request application privileges for Windows Vista
   RequestExecutionLevel admin
@@ -74,7 +72,10 @@ Section "程序核心组件" SecDummy
   
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
-  
+  ; 为 Windows 卸载程序写入键值
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SCREEN.PICS" "DisplayName" "SCREEN.PICS（只用于移除）"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SCREEN.PICS" "UninstallString" "$INSTDIR\uninst.exe"
+
   ;Register dll
   !include "x64.nsh"
   ${If} ${RunningX64}
@@ -104,7 +105,9 @@ SectionEnd
 Section "Uninstall"
 
   ;ADD YOUR OWN FILES HERE...
-
+  Delete "$DESKTOP\screenpics.lnk"
+  Delete "$QUICKLAUNCH\screenpics.lnk"
+  Delete "$SMPROGRAMS\screenpics.lnk"
   Delete "$INSTDIR\Uninstall.exe"
   Delete "$INSTDIR\*"
   Delete "$INSTDIR\io.loli.sc_lib\*"
@@ -114,8 +117,8 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 
   DeleteRegKey /ifempty HKCU "Software\SCREEN.PICS"
-
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Run\SCREEN"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\SCREEN.PICS" 
 SectionEnd
 
 
@@ -139,7 +142,7 @@ ReadINIStr $R2 "$PLUGINSDIR\\checkbox.ini" "Field 5" "State"
 IntCmp $R0 1 0 +2 +2
     CreateShortCut "$DESKTOP\screenpics.lnk" "$INSTDIR\screenpics.exe" "" "$INSTDIR\screenpics.exe" 0
 IntCmp $R1 1 0 +2 +2
-    CreateShortCut "$QUICKLAUNCH\screenpics.lnk" "$INSTDIR\screenpics.exe" "" "$INSTDIR\screenpics.exe" 0
-IntCmp $R2 1 0 +2 +2  
+    CreateShortCut "$SMPROGRAMS\screenpics.lnk" "$INSTDIR\screenpics.exe" "" "$INSTDIR\screenpics.exe" 0
+IntCmp $R2 1 0 +2 +2
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "SCREEN" "$INSTDIR\screenpics.exe"
 FunctionEnd
