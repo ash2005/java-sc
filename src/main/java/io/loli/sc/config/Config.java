@@ -118,7 +118,7 @@ public class Config {
 
 	private void init() {
 		// 先是初始化各个目录
-		path = FileSystemView.getFileSystemView().getHomeDirectory();
+		path = FileSystemView.getFileSystemView().getDefaultDirectory();
 		propDir = new File(path.getAbsolutePath() + File.separator + CONFIG_DIR);
 		propFile = new File(propDir.getAbsolutePath() + File.separator
 				+ CONFIG_FILE);
