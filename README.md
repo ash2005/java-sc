@@ -9,7 +9,7 @@ A screenshot program written in java
 ###0.0.1-RELEASE has bean released###
 
 Windows version can be found at ```https://github.com/chocotan/java-sc/releases```
-
+
 Linux version can be built from java sources using maven:
 ```
 mvn clean package assembly:assembly
