@@ -18,8 +18,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.imageio.ImageIO;
 
@@ -96,7 +94,8 @@ public class ScreenCaptor {
 
 	private File saveImageToFile(BufferedImage img) {
 		File f = new File(config.getSavePath() + File.separator
-				+ FileNameGenerator.generate() + ".png");
+				+ FileNameGenerator.generate(config.getFileNameFormat())
+				+ ".png");
 		try {
 			// png格式比jpg格式清晰很多
 			ImageIO.write(img, "png", f);

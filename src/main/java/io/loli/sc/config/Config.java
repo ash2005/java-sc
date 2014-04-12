@@ -1,5 +1,7 @@
 package io.loli.sc.config;
 
+import io.loli.util.FileNameGenerator;
+
 import java.awt.Desktop;
 import java.awt.event.KeyEvent;
 import java.io.BufferedInputStream;
@@ -370,7 +372,7 @@ public class Config {
 
 	public String getFileNameFormat() {
 		if (fileNameFormat == null) {
-			fileNameFormat = "yyyy-MM-dd HH:mm:ss的屏幕截图";
+			fileNameFormat = FileNameGenerator.generate();
 		}
 		return fileNameFormat;
 	}
