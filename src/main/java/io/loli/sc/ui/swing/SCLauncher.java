@@ -42,14 +42,16 @@ public class SCLauncher {
                     }
                     DragFrame df = new DragFrame();
                     String s = df.getResult();
-                    ScreenCaptor.copyToClipboard(s);
-                    new MP3Player().play(ClassLoader
-                            .getSystemResourceAsStream("message.mp3"));
-                    while (ifStrinClipboard(s)) {
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                    if (!df.isCanStop()) {
+                        ScreenCaptor.copyToClipboard(s);
+                        new MP3Player().play(ClassLoader
+                                .getSystemResourceAsStream("message.mp3"));
+                        while (ifStrinClipboard(s)) {
+                            try {
+                                Thread.sleep(2000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
 

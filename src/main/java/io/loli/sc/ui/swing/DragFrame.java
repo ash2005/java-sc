@@ -189,6 +189,8 @@ public class DragFrame extends JFrame {
 
     }
 
+    private boolean canStop = false;
+
     class CostumKeyListener extends KeyAdapter {
         @Override
         public void keyReleased(KeyEvent e) {
@@ -196,8 +198,10 @@ public class DragFrame extends JFrame {
                 if (dragPanel.isVisible()) {
                     dragPanel.setVisible(false);
                 } else {
+                    canStop = true;
                     jframe.remove(dragPanel);
                     jframe.dispose();
+
                 }
             }
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -249,7 +253,9 @@ public class DragFrame extends JFrame {
                     dragPanel.resize();
                 jframe.repaint();
             } else {
+                canStop = true;
                 jframe.dispose();
+
             }
         }
     }
@@ -300,7 +306,10 @@ public class DragFrame extends JFrame {
                     dragPanel.move(m2 - m1, n2 - n1);
                 jframe.repaint();
             } else {
+                canStop = true;
+
                 jframe.dispose();
+
             }
         }
 
@@ -315,7 +324,12 @@ public class DragFrame extends JFrame {
     }
 
     public String getResult() {
-        while (result == null || result.equals("")) {
+        while ((result == null || result.equals("")) && !canStop) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return result;
     }
@@ -326,5 +340,9 @@ public class DragFrame extends JFrame {
 
     public void setSubImg(BufferedImage subImg) {
         this.subImg = subImg;
+    }
+
+    public boolean isCanStop() {
+        return canStop;
     }
 }
