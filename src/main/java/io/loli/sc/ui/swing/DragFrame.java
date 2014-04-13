@@ -253,9 +253,14 @@ public class DragFrame extends JFrame {
                     dragPanel.resize();
                 jframe.repaint();
             } else {
-                canStop = true;
-                jframe.dispose();
+            	if (dragPanel.isVisible()) {
+                    dragPanel.setVisible(false);
+                } else {
+                    canStop = true;
+                    jframe.remove(dragPanel);
+                    jframe.dispose();
 
+                }
             }
         }
     }
@@ -306,10 +311,13 @@ public class DragFrame extends JFrame {
                     dragPanel.move(m2 - m1, n2 - n1);
                 jframe.repaint();
             } else {
-                canStop = true;
-
-                jframe.dispose();
-
+            	if (dragPanel.isVisible()) {
+                    dragPanel.setVisible(false);
+                } else {
+                    canStop = true;
+                    jframe.remove(dragPanel);
+                    jframe.dispose();
+                }
             }
         }
 
