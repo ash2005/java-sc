@@ -2,12 +2,10 @@ package io.loli.sc;
 
 import io.loli.sc.config.Config;
 import io.loli.sc.system.HotKeyRegister;
-import io.loli.sc.system.HotKeyTask;
 import io.loli.sc.system.LinuxHotKeyRegister;
 import io.loli.sc.system.ScreenShotHotkeyTask;
 import io.loli.sc.system.WindowsHotKeyRegister;
 import io.loli.sc.ui.SystemMenu;
-import io.loli.sc.ui.swing.SCLauncher;
 import io.loli.sc.ui.swing.SwingSystemMenu;
 
 import java.util.ArrayList;
@@ -24,74 +22,71 @@ import java.util.concurrent.Executors;
  * @author choco
  */
 public class SystemMenuSelector {
-	private static SystemMenu menu;
-	private static Config config = new Config();
-	private static List<HotKeyRegister> registerList = new ArrayList<HotKeyRegister>();
-	private static ExecutorService executor = Executors.newCachedThreadPool();
-	private static HotKeyRegister register;
+    private static SystemMenu menu;
+    private static Config config = new Config();
+    private static List<HotKeyRegister> registerList = new ArrayList<HotKeyRegister>();
+    private static ExecutorService executor = Executors.newCachedThreadPool();
+    private static HotKeyRegister register;
 
-	static {
-		String name = System.getProperty("os.name");
-		if (name.toLowerCase().indexOf("linux") != -1) {
-			register = new LinuxHotKeyRegister(new ScreenShotHotkeyTask());
-		}
-		if (name.toLowerCase().indexOf("win") != -1) {
-			register = new WindowsHotKeyRegister(new ScreenShotHotkeyTask());
-		}
-	}
+    static {
+        String name = System.getProperty("os.name");
+        if (name.toLowerCase().indexOf("linux") != -1) {
+            register = new LinuxHotKeyRegister(new ScreenShotHotkeyTask());
+        }
+        if (name.toLowerCase().indexOf("win") != -1) {
+            register = new WindowsHotKeyRegister(new ScreenShotHotkeyTask());
+        }
+    }
 
-	public static void main(String[] args) {
-		showMenu();
-		startup();
-	}
+    public static void main(String[] args) {
+        showMenu();
+        startup();
+    }
 
-	public static class OptionRunnable extends Thread {
-		public OptionRunnable() {
-			super();
-		}
+    public static class OptionRunnable extends Thread {
+        public OptionRunnable() {
+            super();
+        }
 
-		private void regist(final String option) {
-			int[] keys = config.getHotKeys(option);
-			registerList.add(register);
-			register.register(option.equals("select") ? 0 : 1, keys[0], keys[1]);
-		}
+        private void regist(final String option) {
+            int[] keys = config.getHotKeys(option);
+            registerList.add(register);
+            register.register(option.equals("select") ? 0 : 1, keys[0], keys[1]);
+        }
 
-		@Override
-		public void run() {
-			regist("select");
-			regist("full");
-			register.startListen();
-		}
-	}
+        @Override
+        public void run() {
+            regist("select");
+            regist("full");
+            register.startListen();
+        }
+    }
 
-	public static void showMenu() {
-		// 托盘菜单线程
-		executor.execute(new Thread() {
-			@Override
-			public void run() {
-				menu = new SwingSystemMenu();
-				menu.run();
-			}
-		});
+    public static void showMenu() {
+        // 托盘菜单线程
+        executor.execute(() -> {
+            menu = new SwingSystemMenu();
+            menu.run();
+        });
 
-	}
+    }
 
-	public static void startup() {
-		// 后台监听注册快捷键线程
-		if (executor.isShutdown()) {
-			executor = Executors.newCachedThreadPool();
-		}
-		executor.execute(new OptionRunnable());
+    public static void startup() {
+        // 后台监听注册快捷键线程
+        if (executor.isShutdown()) {
+            executor = Executors.newCachedThreadPool();
+        }
+        executor.execute(new OptionRunnable());
 
-	}
+    }
 
-	public static void shutdown() {
-		executor.shutdown();
-	}
+    public static void shutdown() {
+        executor.shutdown();
+    }
 
-	public static void restart() {
-		shutdown();
-		startup();
-	}
+    public static void restart() {
+        shutdown();
+        startup();
+    }
 
 }

@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -109,6 +110,8 @@ public class DragFrame extends JFrame {
             int w = getWidth();
             int h = getHeight();
             subImg = img.getSubimage(a, b, w, h);
+            originSubImg = originImg.getSubimage((int) (a * bi),
+                    (int) (b * bi), (int) (w * bi), (int) (h * bi));
             g.drawImage(subImg, 0, 0, null);
         }
 
@@ -131,15 +134,31 @@ public class DragFrame extends JFrame {
 
     }
 
+    BufferedImage originImg;
+    BufferedImage originSubImg;
+    private double bi;
+
     private void setBackground() {
-        img = ScreenCaptor.screenShot();
+        originImg = ScreenCaptor.screenShot();
+        img = ScreenCaptor.displayScreenShot();
+        bi = ((double) originImg.getWidth()) / img.getWidth();
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         try {
             ImageIO.write(img, "png", byteOut);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ImageIcon background = new ImageIcon(byteOut.toByteArray());
+        Image temp = originImg.getScaledInstance((int) Toolkit
+                .getDefaultToolkit().getScreenSize().getWidth(), (int) Toolkit
+                .getDefaultToolkit().getScreenSize().getHeight(),
+                Image.SCALE_AREA_AVERAGING);
+        img = new BufferedImage(temp.getWidth(null), temp.getHeight(null),
+                BufferedImage.TYPE_INT_RGB);
+        Graphics bg = img.getGraphics();
+        bg.drawImage(temp, 0, 0, null);
+        bg.dispose();
+
+        ImageIcon background = new ImageIcon(temp);
         bgLabel = new JLabel(background);
         bgLabel.setBounds(0, 0, background.getIconWidth(),
                 background.getIconHeight());
@@ -217,7 +236,8 @@ public class DragFrame extends JFrame {
             ScreenCaptor sc = ScreenCaptor.newInstance(false);
             Config config = new Config();
             sc.setConfig(config);
-            result = sc.uploadImage(config.getDefaultUpload(), getSubImg());
+            result = sc.uploadImage(config.getDefaultUpload(),
+                    getOriginSubImg());
         }
     }
 
@@ -253,7 +273,7 @@ public class DragFrame extends JFrame {
                     dragPanel.resize();
                 jframe.repaint();
             } else {
-            	if (dragPanel.isVisible()) {
+                if (dragPanel.isVisible()) {
                     dragPanel.setVisible(false);
                 } else {
                     canStop = true;
@@ -311,7 +331,7 @@ public class DragFrame extends JFrame {
                     dragPanel.move(m2 - m1, n2 - n1);
                 jframe.repaint();
             } else {
-            	if (dragPanel.isVisible()) {
+                if (dragPanel.isVisible()) {
                     dragPanel.setVisible(false);
                 } else {
                     canStop = true;
@@ -340,6 +360,14 @@ public class DragFrame extends JFrame {
             }
         }
         return result;
+    }
+
+    public BufferedImage getOriginSubImg() {
+        return originSubImg;
+    }
+
+    public void setOriginSubImg(BufferedImage originSubImg) {
+        this.originSubImg = originSubImg;
     }
 
     public BufferedImage getSubImg() {

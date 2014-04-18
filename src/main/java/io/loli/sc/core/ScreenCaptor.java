@@ -163,7 +163,7 @@ public class ScreenCaptor {
 	 * 
 	 * @return 返回截图的BufferedImage对象
 	 */
-	private static BufferedImage winScreenShot() {
+	public static BufferedImage winScreenShot() {
 		Rectangle screen = new Rectangle(Toolkit.getDefaultToolkit()
 				.getScreenSize());
 		BufferedImage screenCapture = null;
@@ -181,7 +181,24 @@ public class ScreenCaptor {
 	 * @return 返回截图的BufferedImage对象
 	 */
 	private static BufferedImage macScreenShot() {
-		return winScreenShot();
+	    File file = new File(System.getProperty("java.io.tmpdir"),
+                FileNameGenerator.generate() + ".png");
+        try {
+            // 需要加waitFor()等待执行结束
+            Runtime.getRuntime()
+                    .exec(new String[] { "/bin/sh", "-c",
+                            "screencapture " + file.getCanonicalPath() })
+                    .waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        BufferedImage screenCapture = null;
+        try {
+            screenCapture = ImageIO.read(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return screenCapture;
 	}
 
 	public String getLink() {
@@ -203,4 +220,17 @@ public class ScreenCaptor {
 	public void setConfig(Config config) {
 		this.config = config;
 	}
+
+    public static BufferedImage displayScreenShot() {
+        String system = System.getProperty("os.name").toLowerCase();
+        if (system.indexOf("windows") >= 0) {
+            return winScreenShot();
+        } else if (system.indexOf("linux") >= 0) {
+            return linuxScreenShot();
+        } else if (system.indexOf("mac") >= 0) {
+            return winScreenShot();
+        } else {
+            return winScreenShot();
+        }
+    }
 }
