@@ -64,9 +64,11 @@ public class SystemMenuSelector {
 
     public static void showMenu() {
         // 托盘菜单线程
-        executor.execute(() -> {
-            menu = new SwingSystemMenu();
-            menu.run();
+        executor.execute(new Thread() {
+            public void run() {
+                menu = new SwingSystemMenu();
+                menu.run();
+            }
         });
 
     }
