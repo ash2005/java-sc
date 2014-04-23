@@ -2,9 +2,8 @@ package io.loli.sc;
 
 import io.loli.sc.config.Config;
 import io.loli.sc.system.HotKeyRegister;
-import io.loli.sc.system.LinuxHotKeyRegister;
 import io.loli.sc.system.ScreenShotHotkeyTask;
-import io.loli.sc.system.WindowsHotKeyRegister;
+import io.loli.sc.system.SimpleHotKeyRegister;
 import io.loli.sc.ui.SystemMenu;
 import io.loli.sc.ui.swing.SwingSystemMenu;
 
@@ -30,12 +29,7 @@ public class SystemMenuSelector {
 
     static {
         String name = System.getProperty("os.name");
-        if (name.toLowerCase().indexOf("linux") != -1) {
-            register = new LinuxHotKeyRegister(new ScreenShotHotkeyTask());
-        }
-        if (name.toLowerCase().indexOf("win") != -1) {
-            register = new WindowsHotKeyRegister(new ScreenShotHotkeyTask());
-        }
+        register = new SimpleHotKeyRegister(new ScreenShotHotkeyTask());
     }
 
     public static void main(String[] args) {
