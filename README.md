@@ -15,5 +15,4 @@ Linux version can be built from java sources using maven:
 mvn clean package assembly:assembly
 java -jar target/io.loli.sc-jar-with-dependencies.jar 
 ```
-
-Mac version is under development
+0.0.2-SNAPSHOT now support OS X
