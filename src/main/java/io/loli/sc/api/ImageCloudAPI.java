@@ -240,7 +240,7 @@ public class ImageCloudAPI extends APITools implements API {
         return token;
     }
 
-    private static final String BASE_URL = "http://localhost:8080/sc-server/";
+    private static final String BASE_URL = "http://loli.io/";
     private static final String TOKEN_URL = BASE_URL + "api/token";
     private static final String UPLOAD_URL = BASE_URL + "api/upload";
 
