@@ -59,6 +59,8 @@ public class ImageCloudAPI extends APITools implements API {
             multiPartEntityBuilder
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             // 可以直接addBinary
+            FileBody fb = new FileBody(fileToUpload);
+            System.out.println(fb.getFilename());
             multiPartEntityBuilder.addPart("image", new FileBody(fileToUpload));
             // 可以直接addText
             multiPartEntityBuilder.addPart("token", new StringBody(token,
@@ -89,7 +91,7 @@ public class ImageCloudAPI extends APITools implements API {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return BASE_URL + img.getPath();
+        return img.getPath();
     }
 
     public static class ClientToken {
@@ -238,7 +240,7 @@ public class ImageCloudAPI extends APITools implements API {
         return token;
     }
 
-    private static final String BASE_URL = "http://loli.io:8080/sc-server/";
+    private static final String BASE_URL = "http://localhost:8080/sc-server/";
     private static final String TOKEN_URL = BASE_URL + "api/token";
     private static final String UPLOAD_URL = BASE_URL + "api/upload";
 
@@ -262,7 +264,7 @@ public class ImageCloudAPI extends APITools implements API {
                 new BasicNameValuePair("email", email),
                 new BasicNameValuePair("password", MD5Util.hash(password)) }));
         String result = post(TOKEN_URL, params);
-        
+
         ObjectMapper mapper = new ObjectMapper();
         token = null;
         try {

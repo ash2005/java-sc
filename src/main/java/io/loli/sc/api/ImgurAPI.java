@@ -168,7 +168,6 @@ public class ImgurAPI extends APITools implements API {
         ObjectMapper mapper = new ObjectMapper();
         AccessToken token = null;
         try {
-            System.out.println(post(REFRESH_TOKEN_URL, params));
             token = mapper.readValue(post(REFRESH_TOKEN_URL, params),
                     AccessToken.class);
         } catch (JsonParseException e) {
