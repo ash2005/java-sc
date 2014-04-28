@@ -80,6 +80,7 @@ public class ImageCloudAPI extends APITools implements API {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(result);
         ObjectMapper mapper = new ObjectMapper();
         UploadedImage img = null;
         try {
