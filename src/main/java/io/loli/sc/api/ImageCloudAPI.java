@@ -4,8 +4,6 @@ import io.loli.sc.config.Config;
 import io.loli.util.MD5Util;
 
 import java.awt.BorderLayout;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
