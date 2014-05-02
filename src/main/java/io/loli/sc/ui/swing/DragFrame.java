@@ -8,16 +8,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -137,28 +135,24 @@ public class DragFrame extends JFrame {
     BufferedImage originImg;
     BufferedImage originSubImg;
     private double bi;
-
+    
+    
     private void setBackground() {
         originImg = ScreenCaptor.screenShot();
-        img = ScreenCaptor.displayScreenShot();
-        bi = ((double) originImg.getWidth()) / img.getWidth();
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(img, "png", byteOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Image temp = originImg.getScaledInstance((int) Toolkit
-                .getDefaultToolkit().getScreenSize().getWidth(), (int) Toolkit
-                .getDefaultToolkit().getScreenSize().getHeight(),
-                Image.SCALE_AREA_AVERAGING);
-        img = new BufferedImage(temp.getWidth(null), temp.getHeight(null),
+        
+        img = new BufferedImage(Toolkit
+                .getDefaultToolkit().getScreenSize().width, Toolkit
+                .getDefaultToolkit().getScreenSize().height,
                 BufferedImage.TYPE_INT_RGB);
-        Graphics bg = img.getGraphics();
-        bg.drawImage(temp, 0, 0, null);
+        Graphics2D bg = img.createGraphics();
+        bg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        bg.drawImage(originImg , 0, 0, Toolkit
+                .getDefaultToolkit().getScreenSize().width,Toolkit
+                .getDefaultToolkit().getScreenSize().height,null);
         bg.dispose();
+        bi = ((double) originImg.getWidth()) / img.getWidth();
 
-        ImageIcon background = new ImageIcon(temp);
+        ImageIcon background = new ImageIcon(img);
         bgLabel = new JLabel(background);
         bgLabel.setBounds(0, 0, background.getIconWidth(),
                 background.getIconHeight());

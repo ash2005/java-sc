@@ -3,16 +3,26 @@ package io.loli.sc.api;
 import io.loli.sc.config.Config;
 import io.loli.util.MD5Util;
 
+import java.awt.BorderLayout;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
-import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
@@ -59,7 +69,6 @@ public class ImageCloudAPI extends APITools implements API {
             multiPartEntityBuilder
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             // 可以直接addBinary
-            FileBody fb = new FileBody(fileToUpload);
             multiPartEntityBuilder.addPart("image", new FileBody(fileToUpload));
             // 可以直接addText
             multiPartEntityBuilder.addPart("token", new StringBody(token,
@@ -79,6 +88,7 @@ public class ImageCloudAPI extends APITools implements API {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(result);
         ObjectMapper mapper = new ObjectMapper();
         UploadedImage img = null;
         try {
@@ -239,60 +249,59 @@ public class ImageCloudAPI extends APITools implements API {
         return token;
     }
 
-    private static final String BASE_URL = "http://localhost:8080/sc-server/";
+    private static final String BASE_URL = "http://loli.io/";
     private static final String TOKEN_URL = BASE_URL + "api/token";
     private static final String UPLOAD_URL = BASE_URL + "api/upload";
 
     @Override
     public void auth() {
-        String email = JOptionPane.showInputDialog("请输入登录邮箱");
-        String password = null;
-        // TODO 对邮箱地址进行验证
-        if (null != email && !"".equals(email.trim())) {
-            password = PasswordBox.showInputDialog("请输入密码(本应用不会保存你的密码)");
-            if (null != password && !"".equals(password.trim())) {
-
-            } else {
-                JOptionPane.showMessageDialog(null, "你没有输入密码");
-            }
-        } else {
-            JOptionPane.showMessageDialog(null, "你没有输入邮箱");
+        Map<String, String> authStr = this.login(null);
+        String email = authStr.get("user");
+        String passwd = authStr.get("pass");
+        if (email == null || email.trim().equals("")) {
+            return;
         }
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.addAll(Arrays.asList(new NameValuePair[] {
                 new BasicNameValuePair("email", email),
-                new BasicNameValuePair("password", MD5Util.hash(password)) }));
+                new BasicNameValuePair("password", MD5Util.hash(passwd)) }));
         String result = post(TOKEN_URL, params);
 
         ObjectMapper mapper = new ObjectMapper();
         token = null;
         try {
             token = mapper.readValue(result, ClientToken.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            if (token.getUser() == null) {
+                JOptionPane.showMessageDialog(null, "用户名密码错误");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    static public class PasswordBox {
+    public Hashtable<String, String> login(JFrame frame) {
+        Hashtable<String, String> logininformation = new Hashtable<String, String>();
 
-        static JPasswordField passwd = new JPasswordField(10);
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
 
-        static public String showInputDialog(String s) {
-            JOptionPane localJOptionPane = new JOptionPane(s,
-                    JOptionPane.QUESTION_MESSAGE);
-            localJOptionPane.add(passwd);
-            passwd.setEchoChar('*');
-            JDialog localJDialog = localJOptionPane.createDialog(
-                    localJOptionPane, "Input");
-            localJDialog.setVisible(true);
-            String localObject = String.valueOf(passwd.getPassword());
-            localJDialog.dispose();
-            return localObject;
-        }
+        JPanel label = new JPanel(new GridLayout(0, 1, 2, 2));
+        label.add(new JLabel("E-Mail", SwingConstants.RIGHT));
+        label.add(new JLabel("Password", SwingConstants.RIGHT));
+        panel.add(label, BorderLayout.WEST);
+
+        JPanel controls = new JPanel(new GridLayout(0, 1, 2, 2));
+        JTextField username = new JTextField(10);
+        username.requestFocus();
+        controls.add(username);
+        JPasswordField password = new JPasswordField(10);
+        controls.add(password);
+        panel.add(controls, BorderLayout.CENTER);
+
+        JOptionPane.showMessageDialog(frame, panel, "login",
+                JOptionPane.QUESTION_MESSAGE);
+        logininformation.put("user", username.getText());
+        logininformation.put("pass", new String(password.getPassword()));
+        return logininformation;
     }
 
 }

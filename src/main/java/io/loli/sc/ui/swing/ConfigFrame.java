@@ -47,6 +47,8 @@ public class ConfigFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private Config config;
 
+    private JFrame jframe;
+
     class KeyListenPanel extends JDialog {
         private static final long serialVersionUID = 5526655422709068055L;
         private JLabel infoLabel = new JLabel("请按键");
@@ -57,8 +59,10 @@ public class ConfigFrame extends JFrame {
         private Set<Integer> keyIntSet = new LinkedHashSet<Integer>();
         private String hotkeyStr;
 
-        public KeyListenPanel(String option) {
-            super();
+        public KeyListenPanel(JFrame parentComponent, String option) {
+            super(parentComponent,true);
+            this.setComponentOrientation(((parentComponent == null) ? getRootPane()
+                    : parentComponent).getComponentOrientation());
             this.setLayout(null);
             this.add(infoLabel);
             this.add(okButton);
@@ -692,7 +696,7 @@ public class ConfigFrame extends JFrame {
                 ImageCloudAPI api = new ImageCloudAPI();
                 api.auth();
                 ImageCloudAPI.ClientToken token = api.getToken();
-                if (token.getId() != 0) {
+                if (token != null && token.getId() != 0) {
                     config.getImageCloudConfig().setToken(token.getToken());
                     config.getImageCloudConfig().setEmail(
                             token.getUser().getEmail());
@@ -703,8 +707,6 @@ public class ConfigFrame extends JFrame {
                     uploadChoice.addItem("imgCloud");
                     imageCloudAuthButton.setEnabled(false);
                     imageCloudRemoveAuthButton.setEnabled(true);
-                } else {
-                    JOptionPane.showMessageDialog(null, "您输入的邮箱或密码错误");
                 }
             }
         });
@@ -724,14 +726,14 @@ public class ConfigFrame extends JFrame {
         fullShotKeyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new KeyListenPanel("full");
+                new KeyListenPanel(jframe, "full");
             }
         });
 
         selectShotKeyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new KeyListenPanel("select");
+                new KeyListenPanel(jframe, "select");
             }
         });
 
@@ -747,6 +749,7 @@ public class ConfigFrame extends JFrame {
         this.addcomponents();
         this.addListeners();
         this.initFatherFrame();
+        this.jframe = this;
     }
 
     public void setConfig(Config config) {
