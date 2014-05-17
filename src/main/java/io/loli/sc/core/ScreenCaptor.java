@@ -5,7 +5,9 @@ import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
+import io.loli.sc.api.UploadException;
 import io.loli.sc.config.Config;
+import io.loli.sc.ui.MessageSender;
 import io.loli.util.FileNameGenerator;
 
 import java.awt.AWTException;
@@ -102,13 +104,23 @@ public class ScreenCaptor {
             // png格式比jpg格式清晰很多
             ImageIO.write(img, "png", f);
         } catch (IOException e) {
-            logger.error("写入图片错误:" + e.getMessage());
+            logger.error("保存图片错误:" + e.getMessage());
+            MessageSender.getInstance().showDialog("保存图片错误:" + e.getMessage());
         }
         return f;
     }
 
     private String uploadFile(File file) {
-        return this.getAPI().upload(file);
+        String s = null;
+        try {
+            s = this.getAPI().upload(file);
+        } catch (UploadException e) {
+            logger.error("上传图片出错，错误信息为" + e.getMessage());
+            MessageSender.getInstance().showDialog(
+                    "上传图片出错，错误信息为" + e.getMessage());
+        }
+
+        return s;
     }
 
     public String uploadImage(String apiStr, BufferedImage image) {

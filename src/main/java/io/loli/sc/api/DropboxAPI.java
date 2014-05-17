@@ -16,8 +16,6 @@ import java.util.Locale;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.dropbox.core.DbxClient;
@@ -35,81 +33,42 @@ public class DropboxAPI extends APITools implements API {
 
     private Config config;
 
-    public void auth() {
+    public void auth() throws UploadException {
         Desktop desktop = Desktop.getDesktop();
         try {
             desktop.browse(new URI(AUTH));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        } catch (IOException | URISyntaxException e) {
+            throw new UploadException(e);
         }
     }
 
-    public String upload(File fileToUpload) {
+    public String upload(File fileToUpload) throws UploadException {
         DbxRequestConfig dconfig = new DbxRequestConfig("sc-java", Locale
                 .getDefault().toString());
         DbxClient client = new DbxClient(dconfig, config.getDropboxConfig()
                 .getAccessToken());
 
         DbxEntry.File uploadedFile = null;
-        InputStream inputStream = null;
         String shareLink = null;
-        try {
-            inputStream = new FileInputStream(fileToUpload);
+        try (InputStream inputStream = new FileInputStream(fileToUpload);) {
             uploadedFile = client.uploadFile("/" + fileToUpload.getName(),
                     DbxWriteMode.add(), fileToUpload.length(), inputStream);
             shareLink = client.createShareableUrl(uploadedFile.path);
 
-        } catch (DbxException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        } catch (DbxException | IOException e) {
+            throw new UploadException(e);
         }
         return shareLink;
     }
 
-    // /**
-    // * post上传文件
-    // */
-    // private String postFile(String postUrl, File imgFileToUpload,
-    // String accessToken) {
-    // CloseableHttpClient httpclient = HttpClients.createDefault();
-    // HttpPut hp = new HttpPut(postUrl);
-    // hp.addHeader("Authorization", "Bearer " + accessToken);
-    // CloseableHttpResponse response = null;
-    // String result = null;
-    // try {
-    // MultipartEntityBuilder multiPartEntityBuilder = MultipartEntityBuilder
-    // .create();
-    // multiPartEntityBuilder.addBinaryBody("file", imgFileToUpload);
-    // hp.setEntity(multiPartEntityBuilder.build());
-    // response = httpclient.execute(hp);
-    // result = EntityUtils.toString(response.getEntity());
-    // } catch (ClientProtocolException e) {
-    // e.printStackTrace();
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // return result;
-    // }
-
     /**
      * 通过pin码获取token
      * 
-     * @param pin
-     *            pin码
+     * @param pin pin码
      * @return token对象
+     * @throws UploadException
      */
-    public AccessToken pinToToken(String pin) {
+    public AccessToken pinToToken(String pin) throws UploadException {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.addAll(Arrays.asList(new NameValuePair[] {
                 new BasicNameValuePair("client_id", CLIENT_ID),
@@ -121,12 +80,8 @@ public class DropboxAPI extends APITools implements API {
         AccessToken token = null;
         try {
             token = mapper.readValue(result, AccessToken.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return token;
     }
@@ -167,6 +122,5 @@ public class DropboxAPI extends APITools implements API {
     public DropboxAPI(Config config) {
         this.config = config;
     }
-
 
 }

@@ -5,7 +5,9 @@ import io.loli.sc.api.DropboxAPI;
 import io.loli.sc.api.GDriveAPI;
 import io.loli.sc.api.ImageCloudAPI;
 import io.loli.sc.api.ImgurAPI;
+import io.loli.sc.api.UploadException;
 import io.loli.sc.config.Config;
+import io.loli.sc.ui.MessageSender;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -39,6 +41,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 public class ConfigFrame extends JFrame {
     private JPanel jpanel1;
@@ -47,6 +50,7 @@ public class ConfigFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private Config config;
 
+    private static Logger logger = Logger.getLogger(ConfigFrame.class);
     private JFrame jframe;
 
     class KeyListenPanel extends JDialog {
@@ -60,7 +64,7 @@ public class ConfigFrame extends JFrame {
         private String hotkeyStr;
 
         public KeyListenPanel(JFrame parentComponent, String option) {
-            super(parentComponent,true);
+            super(parentComponent, true);
             this.setComponentOrientation(((parentComponent == null) ? getRootPane()
                     : parentComponent).getComponentOrientation());
             this.setLayout(null);
@@ -586,20 +590,27 @@ public class ConfigFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ImgurAPI api = new ImgurAPI();
-                api.auth();
-                String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
-                ImgurAPI.AccessToken token = api.pinToToken(pin);
-                config.getImgurConfig().setAccessToken(token.getAccess_token());
-                config.getImgurConfig().setRefreshToken(
-                        token.getRefresh_token());
-                config.getImgurConfig().setDate(new Date());
-                config.getImgurConfig()
-                        .updateProperties(config.getProperties());
-                config.save();
-                imgurAuthButton.setEnabled(false);
-                imgurRemoveAuthButton.setEnabled(true);
-                imgurAuthLabel.setText("已连接");
-                uploadChoice.addItem("imgur");
+                try {
+                    api.auth();
+                    String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
+                    ImgurAPI.AccessToken token = api.pinToToken(pin);
+                    config.getImgurConfig().setAccessToken(
+                            token.getAccess_token());
+                    config.getImgurConfig().setRefreshToken(
+                            token.getRefresh_token());
+                    config.getImgurConfig().setDate(new Date());
+                    config.getImgurConfig().updateProperties(
+                            config.getProperties());
+                    config.save();
+                    imgurAuthButton.setEnabled(false);
+                    imgurRemoveAuthButton.setEnabled(true);
+                    imgurAuthLabel.setText("已连接");
+                    uploadChoice.addItem("imgur");
+                } catch (UploadException e1) {
+                    logger.error("认证错误:" + e1.getMessage());
+                    MessageSender.getInstance().showDialog(
+                            "认证错误:" + e1.getMessage());
+                }
             }
 
         });
@@ -624,20 +635,26 @@ public class ConfigFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 DropboxAPI api = new DropboxAPI();
-                api.auth();
-                String pin = JOptionPane.showInputDialog("请输入认证码");
-                DropboxAPI.AccessToken token = api.pinToToken(pin);
-                config.getDropboxConfig().setAccessToken(
-                        token.getAccess_token());
+                try {
+                    api.auth();
+                    String pin = JOptionPane.showInputDialog("请输入认证码");
+                    DropboxAPI.AccessToken token = api.pinToToken(pin);
+                    config.getDropboxConfig().setAccessToken(
+                            token.getAccess_token());
 
-                config.getDropboxConfig().setUid(token.getUid());
-                config.getDropboxConfig().updateProperties(
-                        config.getProperties());
-                config.save();
-                dropboxAuthButton.setEnabled(false);
-                dropboxRemoveAuthButton.setEnabled(true);
-                dropboxAuthLabel.setText("已连接");
-                uploadChoice.addItem("dropbox");
+                    config.getDropboxConfig().setUid(token.getUid());
+                    config.getDropboxConfig().updateProperties(
+                            config.getProperties());
+                    config.save();
+                    dropboxAuthButton.setEnabled(false);
+                    dropboxRemoveAuthButton.setEnabled(true);
+                    dropboxAuthLabel.setText("已连接");
+                    uploadChoice.addItem("dropbox");
+                } catch (UploadException e1) {
+                    logger.error("认证错误:" + e1.getMessage());
+                    MessageSender.getInstance().showDialog(
+                            "认证错误:" + e1.getMessage());
+                }
             }
 
         });
@@ -659,21 +676,27 @@ public class ConfigFrame extends JFrame {
         gDriveAuthButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GDriveAPI api = new GDriveAPI();
-                api.auth();
-                String pin = JOptionPane.showInputDialog("请输入code");
-                GDriveAPI.AccessToken token = api.pinToToken(pin);
-                config.getGdriveConfig()
-                        .setAccessToken(token.getAccess_token());
-                config.getGdriveConfig().setRefreshToken(
-                        token.getRefresh_token());
-                config.getGdriveConfig().updateProperties(
-                        config.getProperties());
-                config.save();
-                gDriveAuthLabel.setText("已连接");
-                uploadChoice.addItem("gdrive");
-                gDriveAuthButton.setEnabled(false);
-                gDriveRemoveAuthButton.setEnabled(true);
+                try {
+                    GDriveAPI api = new GDriveAPI();
+                    api.auth();
+                    String pin = JOptionPane.showInputDialog("请输入code");
+                    GDriveAPI.AccessToken token = api.pinToToken(pin);
+                    config.getGdriveConfig().setAccessToken(
+                            token.getAccess_token());
+                    config.getGdriveConfig().setRefreshToken(
+                            token.getRefresh_token());
+                    config.getGdriveConfig().updateProperties(
+                            config.getProperties());
+                    config.save();
+                    gDriveAuthLabel.setText("已连接");
+                    uploadChoice.addItem("gdrive");
+                    gDriveAuthButton.setEnabled(false);
+                    gDriveRemoveAuthButton.setEnabled(true);
+                } catch (UploadException e1) {
+                    logger.error("认证错误:" + e1.getMessage());
+                    MessageSender.getInstance().showDialog(
+                            "认证错误:" + e1.getMessage());
+                }
             }
         });
         gDriveRemoveAuthButton.addActionListener(new ActionListener() {
@@ -693,20 +716,26 @@ public class ConfigFrame extends JFrame {
         imageCloudAuthButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ImageCloudAPI api = new ImageCloudAPI();
-                api.auth();
-                ImageCloudAPI.ClientToken token = api.getToken();
-                if (token != null && token.getId() != 0) {
-                    config.getImageCloudConfig().setToken(token.getToken());
-                    config.getImageCloudConfig().setEmail(
-                            token.getUser().getEmail());
-                    config.getImageCloudConfig().updateProperties(
-                            config.getProperties());
-                    config.save();
-                    imageCloudAuthLabel.setText("已连接");
-                    uploadChoice.addItem("imgCloud");
-                    imageCloudAuthButton.setEnabled(false);
-                    imageCloudRemoveAuthButton.setEnabled(true);
+                try {
+                    ImageCloudAPI api = new ImageCloudAPI();
+                    api.auth();
+                    ImageCloudAPI.ClientToken token = api.getToken();
+                    if (token != null && token.getId() != 0) {
+                        config.getImageCloudConfig().setToken(token.getToken());
+                        config.getImageCloudConfig().setEmail(
+                                token.getUser().getEmail());
+                        config.getImageCloudConfig().updateProperties(
+                                config.getProperties());
+                        config.save();
+                        imageCloudAuthLabel.setText("已连接");
+                        uploadChoice.addItem("imgCloud");
+                        imageCloudAuthButton.setEnabled(false);
+                        imageCloudRemoveAuthButton.setEnabled(true);
+                    }
+                } catch (UploadException e1) {
+                    logger.error("认证错误:" + e1.getMessage());
+                    MessageSender.getInstance().showDialog(
+                            "认证错误:" + e1.getMessage());
                 }
             }
         });

@@ -24,7 +24,6 @@ import javax.swing.SwingConstants;
 
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -36,8 +35,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class ImageCloudAPI extends APITools implements API {
@@ -52,7 +49,7 @@ public class ImageCloudAPI extends APITools implements API {
     }
 
     @Override
-    public String upload(File fileToUpload) {
+    public String upload(File fileToUpload) throws UploadException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost hp = new HttpPost(UPLOAD_URL);
         CloseableHttpResponse response = null;
@@ -81,22 +78,16 @@ public class ImageCloudAPI extends APITools implements API {
             hp.setEntity(multiPartEntityBuilder.build());
             response = httpclient.execute(hp);
             result = EntityUtils.toString(response.getEntity());
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         System.out.println(result);
         ObjectMapper mapper = new ObjectMapper();
         UploadedImage img = null;
         try {
             img = mapper.readValue(result, UploadedImage.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return img.getPath();
     }
@@ -252,7 +243,7 @@ public class ImageCloudAPI extends APITools implements API {
     private static final String UPLOAD_URL = BASE_URL + "api/upload";
 
     @Override
-    public void auth() {
+    public void auth() throws UploadException {
         Map<String, String> authStr = this.login(null);
         String email = authStr.get("user");
         String passwd = authStr.get("pass");
@@ -273,7 +264,7 @@ public class ImageCloudAPI extends APITools implements API {
                 JOptionPane.showMessageDialog(null, "用户名密码错误");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
     }
 

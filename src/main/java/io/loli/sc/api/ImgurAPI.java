@@ -16,7 +16,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -24,9 +23,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class ImgurAPI extends APITools implements API {
@@ -39,18 +36,16 @@ public class ImgurAPI extends APITools implements API {
     private static final String REFRESH_TOKEN_URL = "https://api.imgur.com/oauth2/token";
     private Config config;
 
-    public void auth() {
+    public void auth() throws UploadException {
         Desktop desktop = Desktop.getDesktop();
         try {
             desktop.browse(new URI(AUTH_URL_PIN));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        } catch (IOException | URISyntaxException e) {
+            throw new UploadException(e);
         }
     }
 
-    public String upload(File fileToUpload) {
+    public String upload(File fileToUpload) throws UploadException {
         if (!fileToUpload.exists()) {
             JOptionPane.showMessageDialog(null, "图片文件不存在");
             return "";
@@ -77,12 +72,8 @@ public class ImgurAPI extends APITools implements API {
         ImageInfo imageInfo = null;
         try {
             imageInfo = mapper.readValue(imageString, ImageInfo.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return imageInfo.getData().getLink();
     }
@@ -90,11 +81,11 @@ public class ImgurAPI extends APITools implements API {
     /**
      * 通过pin码获取token
      * 
-     * @param pin
-     *            pin码
+     * @param pin pin码
      * @return token对象
+     * @throws UploadException
      */
-    public AccessToken pinToToken(String pin) {
+    public AccessToken pinToToken(String pin) throws UploadException {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.addAll(Arrays.asList(new NameValuePair[] {
                 new BasicNameValuePair("client_id", CLIENT_ID),
@@ -106,30 +97,17 @@ public class ImgurAPI extends APITools implements API {
         AccessToken token = null;
         try {
             token = mapper.readValue(result, AccessToken.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return token;
     }
 
-    // private List<NameValuePair> generateUploadParams(File imgFileToUpload) {
-    // String imgBase64 = base64(imgFileToUpload);
-    // List<NameValuePair> params = new ArrayList<NameValuePair>();
-    // params.addAll(Arrays.asList(new NameValuePair[] {
-    // new BasicNameValuePair("image", imgBase64),
-    // new BasicNameValuePair("type", "base64") }));
-    // return params;
-    // }
-
-    /**
+    /*
      * post上传文件
      */
     private String postFile(String postUrl, File imgFileToUpload,
-            String accessToken) {
+            String accessToken) throws UploadException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost hp = new HttpPost(postUrl);
         hp.addHeader("Authorization", "Bearer " + accessToken);
@@ -143,10 +121,8 @@ public class ImgurAPI extends APITools implements API {
             hp.setEntity(multiPartEntityBuilder.build());
             response = httpclient.execute(hp);
             result = EntityUtils.toString(response.getEntity());
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return result;
     }
@@ -154,11 +130,11 @@ public class ImgurAPI extends APITools implements API {
     /**
      * token过期后刷新 access token
      * 
-     * @param refreshToken
-     *            之前获取到的刷新用token
+     * @param refreshToken 之前获取到的刷新用token
      * @return token对象
+     * @throws UploadException
      */
-    public AccessToken refreshToken(String refreshToken) {
+    public AccessToken refreshToken(String refreshToken) throws UploadException {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.addAll(Arrays.asList(new NameValuePair[] {
                 new BasicNameValuePair("refresh_token", refreshToken),
@@ -170,49 +146,18 @@ public class ImgurAPI extends APITools implements API {
         try {
             token = mapper.readValue(post(REFRESH_TOKEN_URL, params),
                     AccessToken.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         return token;
 
     }
-
-    // private String base64(File imgFile) {
-    // InputStream in = null;
-    // byte[] data = null;
-    // // 读取图片字节数组
-    // try {
-    // in = new FileInputStream(imgFile);
-    // data = new byte[in.available()];
-    // in.read(data);
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // } finally {
-    // if (in != null) {
-    // try {
-    // in.close();
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
-    // }
-    // }
-    // return Base64.encodeBase64URLSafeString(data);
-    //
-    // }
 
     public ImgurAPI() {
     }
 
     public ImgurAPI(Config config) {
         this.config = config;
-    }
-
-    public static void main(String[] args) {
-        new ImgurAPI().auth();
     }
 
     public static class AccessToken {

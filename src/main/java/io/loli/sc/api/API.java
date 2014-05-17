@@ -3,7 +3,7 @@ package io.loli.sc.api;
 import java.io.File;
 
 public interface API {
-    public String upload(File fileToUpload);
+    public String upload(File fileToUpload) throws UploadException;
 
-    public void auth();
+    public void auth() throws UploadException;
 }
