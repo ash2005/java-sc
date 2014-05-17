@@ -1,8 +1,6 @@
 package io.loli.sc.api;
 
-import io.loli.sc.api.GDriveAPI.GDriveAuth.CodeExchangeException;
 import io.loli.sc.config.Config;
-import io.loli.sc.core.ScreenCaptor;
 
 import java.awt.Desktop;
 import java.awt.HeadlessException;
@@ -54,7 +52,7 @@ public class GDriveAPI extends APITools implements API {
     private Config config;
 
     @Override
-    public String upload(File fileToUpload) {
+    public String upload(File fileToUpload) throws UploadException {
         com.google.api.services.drive.model.File f = null;
         try {
             Credential cre = GDriveUpload.tokenToCre(config.getGdriveConfig()
@@ -69,13 +67,15 @@ public class GDriveAPI extends APITools implements API {
             f = GDriveUpload.uploadFile(fileToUpload, cre, parent_id);
             GDriveUpload.insertPermission(drive, f.getId(), "", "anyone",
                     "reader");
-        } catch (HeadlessException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (HeadlessException | IOException e) {
+            throw new UploadException(e);
         }
-        f.setWebViewLink(f.getWebContentLink().substring(0,
-                f.getWebContentLink().indexOf("&")));
+        try {
+            f.setWebViewLink(f.getWebContentLink().substring(0,
+                    f.getWebContentLink().indexOf("&")));
+        } catch (Exception e) {
+            throw new UploadException(e);
+        }
         return f.getWebViewLink();
     }
 
@@ -89,23 +89,21 @@ public class GDriveAPI extends APITools implements API {
     private String code;
 
     @Override
-    public void auth() {
+    public void auth() throws UploadException {
         Desktop desktop = Desktop.getDesktop();
         try {
             desktop.browse(new URI(AUTH));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+        } catch (IOException | URISyntaxException e) {
+            throw new UploadException(e);
         }
     }
 
-    public AccessToken pinToToken(String pin) {
+    public AccessToken pinToToken(String pin) throws UploadException {
         Credential c = null;
         try {
             c = GDriveAuth.exchangeCode(pin);
         } catch (io.loli.sc.api.GDriveAPI.GDriveAuth.CodeExchangeException e) {
-            e.printStackTrace();
+            throw new UploadException(e);
         }
         AccessToken token = new AccessToken();
         token.setAccess_token(c.getAccessToken());
@@ -116,15 +114,6 @@ public class GDriveAPI extends APITools implements API {
 
     public String getCode() {
         return code;
-    }
-
-    public static void main(String[] args) throws HeadlessException,
-            CodeExchangeException, IOException {
-        Config c = new Config();
-        GDriveAPI g = new GDriveAPI(c);
-        ScreenCaptor sc = ScreenCaptor.newInstance();
-        sc.setConfig(c);
-        g.upload(sc.screenShotSave());
     }
 
     public static class AccessToken {
@@ -204,22 +193,18 @@ public class GDriveAPI extends APITools implements API {
         /**
          * Insert a new permission.
          * 
-         * @param service
-         *            Drive API service instance.
-         * @param fileId
-         *            ID of the file to insert permission for.
-         * @param value
-         *            User or group e-mail address, domain name or {@code null}
-         *            "default" type.
-         * @param type
-         *            The value "user", "group", "domain" or "default".
-         * @param role
-         *            The value "owner", "writer" or "reader".
+         * @param service Drive API service instance.
+         * @param fileId ID of the file to insert permission for.
+         * @param value User or group e-mail address, domain name or
+         *            {@code null} "default" type.
+         * @param type The value "user", "group", "domain" or "default".
+         * @param role The value "owner", "writer" or "reader".
          * @return The inserted permission if successful, {@code null}
          *         otherwise.
+         * @throws UploadException 
          */
         public static Permission insertPermission(Drive service, String fileId,
-                String value, String type, String role) {
+                String value, String type, String role) throws UploadException {
             Permission newPermission = new Permission();
 
             newPermission.setValue(value);
@@ -229,9 +214,8 @@ public class GDriveAPI extends APITools implements API {
                 return service.permissions().insert(fileId, newPermission)
                         .execute();
             } catch (IOException e) {
-                System.out.println("An error occurred: " + e);
+                throw new UploadException(e);
             }
-            return null;
         }
 
         public static com.google.api.services.drive.model.File uploadFile(
@@ -262,7 +246,7 @@ public class GDriveAPI extends APITools implements API {
             return credential;
         }
 
-        public static String createFolder(String name, Credential credential) {
+        public static String createFolder(String name, Credential credential) throws UploadException {
             com.google.api.services.drive.model.File body = new com.google.api.services.drive.model.File();
             body.setTitle(name);
             body.setMimeType("application/vnd.google-apps.folder");
@@ -274,7 +258,7 @@ public class GDriveAPI extends APITools implements API {
             try {
                 result = drive.files().insert(body).execute();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new UploadException(e);
             }
             return result.getId();
         }
@@ -305,11 +289,12 @@ public class GDriveAPI extends APITools implements API {
             return parent_id;
         }
 
-        public static Credential refreshToken(Credential cre) {
+        public static Credential refreshToken(Credential cre)
+                throws UploadException {
             try {
                 cre.refreshToken();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new UploadException(e);
             }
 
             return cre;
@@ -342,8 +327,8 @@ public class GDriveAPI extends APITools implements API {
             /**
              * Construct a GetCredentialsException.
              * 
-             * @param authorizationUrl
-             *            The authorization URL to redirect the user to.
+             * @param authorizationUrl The authorization URL to redirect the
+             *            user to.
              */
             public GetCredentialsException(String authorizationUrl) {
                 this.authorizationUrl = authorizationUrl;
@@ -378,8 +363,8 @@ public class GDriveAPI extends APITools implements API {
             /**
              * Construct a CodeExchangeException.
              * 
-             * @param authorizationUrl
-             *            The authorization URL to redirect the user to.
+             * @param authorizationUrl The authorization URL to redirect the
+             *            user to.
              */
             public CodeExchangeException(String authorizationUrl) {
                 super(authorizationUrl);
@@ -401,8 +386,8 @@ public class GDriveAPI extends APITools implements API {
             /**
              * Construct a NoRefreshTokenException.
              * 
-             * @param authorizationUrl
-             *            The authorization URL to redirect the user to.
+             * @param authorizationUrl The authorization URL to redirect the
+             *            user to.
              */
             public NoRefreshTokenException(String authorizationUrl) {
                 super(authorizationUrl);
@@ -424,8 +409,7 @@ public class GDriveAPI extends APITools implements API {
         /**
          * Retrieved stored credentials for the provided user ID.
          * 
-         * @param userId
-         *            User's ID.
+         * @param userId User's ID.
          * @return Stored Credential if found, {@code null} otherwise.
          */
         static Credential getStoredCredentials(String userId) {
@@ -439,10 +423,8 @@ public class GDriveAPI extends APITools implements API {
         /**
          * Store OAuth 2.0 credentials in the application's database.
          * 
-         * @param userId
-         *            User's ID.
-         * @param credentials
-         *            The OAuth 2.0 credentials to store.
+         * @param userId User's ID.
+         * @param credentials The OAuth 2.0 credentials to store.
          */
         static void storeCredentials(String userId, Credential credentials) {
             // TODO: Implement this method to work with your database.
@@ -456,8 +438,7 @@ public class GDriveAPI extends APITools implements API {
          * Build an authorization flow and store it as a static class attribute.
          * 
          * @return GoogleAuthorizationCodeFlow instance.
-         * @throws IOException
-         *             Unable to load client_secrets.json.
+         * @throws IOException Unable to load client_secrets.json.
          */
         static GoogleAuthorizationCodeFlow getFlow() throws IOException {
             if (flow == null) {
@@ -476,11 +457,10 @@ public class GDriveAPI extends APITools implements API {
         /**
          * Exchange an authorization code for OAuth 2.0 credentials.
          * 
-         * @param authorizationCode
-         *            Authorization code to exchange for OAuth 2.0 credentials.
+         * @param authorizationCode Authorization code to exchange for OAuth 2.0
+         *            credentials.
          * @return OAuth 2.0 credentials.
-         * @throws CodeExchangeException
-         *             An error occurred.
+         * @throws CodeExchangeException An error occurred.
          */
         static Credential exchangeCode(String authorizationCode)
                 throws CodeExchangeException {
@@ -500,11 +480,9 @@ public class GDriveAPI extends APITools implements API {
          * Send a request to the UserInfo API to retrieve the user's
          * information.
          * 
-         * @param credentials
-         *            OAuth 2.0 credentials to authorize the request.
+         * @param credentials OAuth 2.0 credentials to authorize the request.
          * @return User's information.
-         * @throws NoUserIdException
-         *             An error occurred.
+         * @throws NoUserIdException An error occurred.
          */
         static Userinfo getUserInfo(Credential credentials)
                 throws NoUserIdException {
@@ -526,13 +504,10 @@ public class GDriveAPI extends APITools implements API {
         /**
          * Retrieve the authorization URL.
          * 
-         * @param emailAddress
-         *            User's e-mail address.
-         * @param state
-         *            State for the authorization URL.
+         * @param emailAddress User's e-mail address.
+         * @param state State for the authorization URL.
          * @return Authorization URL to redirect the user to.
-         * @throws IOException
-         *             Unable to load client_secrets.json.
+         * @throws IOException Unable to load client_secrets.json.
          */
         public static String getAuthorizationUrl(String emailAddress,
                 String state) throws IOException {
@@ -555,17 +530,14 @@ public class GDriveAPI extends APITools implements API {
          * a NoRefreshTokenException with the authorization URL to redirect the
          * user to.
          * 
-         * @param authorizationCode
-         *            Authorization code to use to retrieve an access token.
-         * @param state
-         *            State to set to the authorization URL in case of error.
+         * @param authorizationCode Authorization code to use to retrieve an
+         *            access token.
+         * @param state State to set to the authorization URL in case of error.
          * @return OAuth 2.0 credentials instance containing an access and
          *         refresh token.
-         * @throws NoRefreshTokenException
-         *             No refresh token could be retrieved from the available
-         *             sources.
-         * @throws IOException
-         *             Unable to load client_secrets.json.
+         * @throws NoRefreshTokenException No refresh token could be retrieved
+         *             from the available sources.
+         * @throws IOException Unable to load client_secrets.json.
          */
         public static Credential getCredentials(String authorizationCode,
                 String state) throws CodeExchangeException,

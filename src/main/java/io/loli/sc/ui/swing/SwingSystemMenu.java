@@ -8,23 +8,12 @@ import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
@@ -35,22 +24,15 @@ import tray.SystemTrayProvider;
 import com.apple.eawt.ApplicationAdapter;
 import com.apple.eawt.ApplicationEvent;
 
-public class SwingSystemMenu extends ApplicationAdapter implements SystemMenu{
-
-    public static void main(String[] args) {
-        new SwingSystemMenu().run();
+public class SwingSystemMenu extends ApplicationAdapter implements SystemMenu {
+    public void handleOpenFile(ApplicationEvent e) {
+        System.out.println("got handleOpenFile event" + " " + e.getFilename());
     }
 
-    
-    public void handleOpenFile(ApplicationEvent e)
-    {
-      System.out.println("got handleOpenFile event"+" "+e.getFilename());
+    public void handleOpenApplication(ApplicationEvent e) {
+        System.out.println("got handleOpenApplication event");
     }
 
-    public void handleOpenApplication(ApplicationEvent e)
-    {
-      System.out.println("got handleOpenApplication event");
-    }
     private PopupMenu generateMenu() {
         // 创建弹出菜单
         PopupMenu popup = new PopupMenu();
@@ -104,7 +86,7 @@ public class SwingSystemMenu extends ApplicationAdapter implements SystemMenu{
                 String tooltip = "ImageCloud";
                 trayAdapter.createAndAddTrayIcon(imageUrl, tooltip,
                         this.generateMenu());
-            } else{
+            } else {
                 SystemTray tray = SystemTray.getSystemTray();
                 // 系统托盘对象
                 Image image = null;
@@ -117,10 +99,11 @@ public class SwingSystemMenu extends ApplicationAdapter implements SystemMenu{
                 trayIcon = new TrayIcon(image, "sc-java", this.generateMenu());
                 trayIcon.setImageAutoSize(true);
                 trayIcon.addActionListener(listener);
-                trayIcon.addMouseMotionListener(new MouseAdapter(){
+                trayIcon.addMouseMotionListener(new MouseAdapter() {
                     public void mouseDragged(MouseEvent e) {
                         System.out.println(e.getSource());
-                      }});
+                    }
+                });
                 try {
                     tray.add(trayIcon);
                 } catch (AWTException e) {
