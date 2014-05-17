@@ -21,10 +21,13 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.apache.log4j.Logger;
+
 public class ScreenCaptor {
     private Config config;
     private volatile String link;
     private String apiStr;
+    private static Logger logger = Logger.getLogger(ScreenCaptor.class);
 
     // 选择上传时不必保存
     private ScreenCaptor(boolean upload) {
@@ -80,8 +83,7 @@ public class ScreenCaptor {
     /**
      * 截图
      * 
-     * @param savePath
-     *            保存图片的路径
+     * @param savePath 保存图片的路径
      * @return 图片文件
      */
     public File screenShotSave() {
@@ -100,7 +102,7 @@ public class ScreenCaptor {
             // png格式比jpg格式清晰很多
             ImageIO.write(img, "png", f);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("写入图片错误:" + e.getMessage());
         }
         return f;
     }
@@ -147,13 +149,14 @@ public class ScreenCaptor {
                             "import -window root " + file.getCanonicalPath() })
                     .waitFor();
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            logger.warn("执行linux下的截图命令出错，错误原因为:" + e.getMessage());
         }
         BufferedImage screenCapture = null;
         try {
             screenCapture = ImageIO.read(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("读取生成的图片出错，使用windows的截图方式替代:" + e.getMessage());
+            screenCapture = winScreenShot();
         }
         return screenCapture;
     }
@@ -170,7 +173,7 @@ public class ScreenCaptor {
         try {
             screenCapture = new Robot().createScreenCapture(screen);
         } catch (AWTException e1) {
-            e1.printStackTrace();
+            logger.error("截图出错，错误原因为:" + e1.getMessage());
         }
         return screenCapture;
     }
@@ -209,31 +212,8 @@ public class ScreenCaptor {
         return link;
     }
 
-    public static void main(String[] args) {
-        ScreenCaptor sc = ScreenCaptor.newInstance();
-        ScreenCaptor.copyToClipboard(sc.getLink());
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void setConfig(Config config) {
         this.config = config;
-    }
-
-    public static BufferedImage displayScreenShot() {
-        String system = System.getProperty("os.name").toLowerCase();
-        if (system.indexOf("windows") >= 0) {
-            return winScreenShot();
-        } else if (system.indexOf("linux") >= 0) {
-            return linuxScreenShot();
-        } else if (system.indexOf("mac") >= 0) {
-            return macScreenShot();
-        } else {
-            return winScreenShot();
-        }
     }
 
 }
