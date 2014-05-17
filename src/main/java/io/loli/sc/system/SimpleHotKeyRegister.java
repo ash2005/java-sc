@@ -1,6 +1,5 @@
 package io.loli.sc.system;
 
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,18 +74,5 @@ public class SimpleHotKeyRegister implements HotKeyRegister{
         getHotKey().addHotKeyListener(index->{
             task.run(index);
         });
-    }
-    public static void main(String[] args){
-        HotKeyRegister register = new SimpleHotKeyRegister(index->{
-            switch(index){
-            case(1):System.out.println(1);break;
-            case(2):System.out.println(2);break;
-            case(3):System.out.println(3);break;
-            }
-        });
-        register.register(1, KeyEvent.CTRL_MASK, KeyEvent.VK_1);
-        register.register(2, KeyEvent.CTRL_MASK, KeyEvent.VK_2);
-        register.register(3, KeyEvent.CTRL_MASK, KeyEvent.VK_3);
-        register.startListen();
     }
 }

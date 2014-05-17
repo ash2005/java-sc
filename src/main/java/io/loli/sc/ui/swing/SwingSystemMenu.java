@@ -101,13 +101,13 @@ public class SwingSystemMenu extends ApplicationAdapter implements SystemMenu {
                 trayIcon.addActionListener(listener);
                 trayIcon.addMouseMotionListener(new MouseAdapter() {
                     public void mouseDragged(MouseEvent e) {
-                        System.out.println(e.getSource());
+
                     }
                 });
                 try {
                     tray.add(trayIcon);
                 } catch (AWTException e) {
-                    System.err.println(e);
+                    // TODO
                 }
 
             }

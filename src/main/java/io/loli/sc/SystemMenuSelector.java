@@ -28,7 +28,6 @@ public class SystemMenuSelector {
     private static HotKeyRegister register;
 
     static {
-        String name = System.getProperty("os.name");
         register = new SimpleHotKeyRegister(new ScreenShotHotkeyTask());
     }
 
