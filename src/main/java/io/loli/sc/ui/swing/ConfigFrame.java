@@ -219,7 +219,7 @@ public class ConfigFrame extends JFrame {
     }
 
     private void initFatherFrame() {
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(392, 487);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         final int WIDTH = screenSize.width;
@@ -557,7 +557,7 @@ public class ConfigFrame extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                setVisible(false);
+                jframe.dispose();
             }
         });
         okButton.addActionListener(new ActionListener() {
