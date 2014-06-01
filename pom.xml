@@ -169,8 +169,8 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.sysware.HelloWorld</mainClass>
+                            <classpathPrefix>io.loli.sc_lib/</classpathPrefix>
+                            <mainClass>io.loli.sc.SystemMenuSelector</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

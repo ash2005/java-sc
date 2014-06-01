@@ -242,7 +242,7 @@ public class ConfigFrame extends JFrame {
         if (config.getGdriveConfig().getAccessToken() != null)
             choice.addItem("gdrive");
         if (config.getImageCloudConfig().getToken() != null)
-            choice.addItem("imgCloud");
+            choice.addItem("screenshot.pics");
     }
 
     private void initComponents() {
@@ -278,7 +278,7 @@ public class ConfigFrame extends JFrame {
         gDriveAuthButton = new JButton("连接");
         gDriveRemoveAuthButton = new JButton("移除");
 
-        imageCloudLabel = new JLabel("imgCloud");
+        imageCloudLabel = new JLabel("screenshot.pics");
         imageCloudAuthLabel = new JLabel();
         imageCloudAuthButton = new JButton("连接");
         imageCloudRemoveAuthButton = new JButton("移除");
@@ -593,6 +593,9 @@ public class ConfigFrame extends JFrame {
                 try {
                     api.auth();
                     String pin = JOptionPane.showInputDialog("请输入认证后的PIN码");
+                    if (pin == null || pin == "") {
+                        return;
+                    }
                     ImgurAPI.AccessToken token = api.pinToToken(pin);
                     config.getImgurConfig().setAccessToken(
                             token.getAccess_token());
@@ -638,6 +641,9 @@ public class ConfigFrame extends JFrame {
                 try {
                     api.auth();
                     String pin = JOptionPane.showInputDialog("请输入认证码");
+                    if (pin == null || pin == "") {
+                        return;
+                    }
                     DropboxAPI.AccessToken token = api.pinToToken(pin);
                     config.getDropboxConfig().setAccessToken(
                             token.getAccess_token());
@@ -680,6 +686,9 @@ public class ConfigFrame extends JFrame {
                     GDriveAPI api = new GDriveAPI();
                     api.auth();
                     String pin = JOptionPane.showInputDialog("请输入code");
+                    if (pin == null || pin == "") {
+                        return;
+                    }
                     GDriveAPI.AccessToken token = api.pinToToken(pin);
                     config.getGdriveConfig().setAccessToken(
                             token.getAccess_token());
@@ -719,6 +728,7 @@ public class ConfigFrame extends JFrame {
                 try {
                     ImageCloudAPI api = new ImageCloudAPI();
                     api.auth();
+                    
                     ImageCloudAPI.ClientToken token = api.getToken();
                     if (token != null && token.getId() != 0) {
                         config.getImageCloudConfig().setToken(token.getToken());
@@ -728,7 +738,7 @@ public class ConfigFrame extends JFrame {
                                 config.getProperties());
                         config.save();
                         imageCloudAuthLabel.setText("已连接");
-                        uploadChoice.addItem("imgCloud");
+                        uploadChoice.addItem("screenshot.pics");
                         imageCloudAuthButton.setEnabled(false);
                         imageCloudRemoveAuthButton.setEnabled(true);
                     }
@@ -749,7 +759,7 @@ public class ConfigFrame extends JFrame {
                 imageCloudAuthButton.setEnabled(true);
                 imageCloudRemoveAuthButton.setEnabled(false);
                 imageCloudAuthLabel.setText("未连接");
-                uploadChoice.removeItem("imgCloud");
+                uploadChoice.removeItem("screenshot.pics");
             }
         });
         fullShotKeyButton.addActionListener(new ActionListener() {
