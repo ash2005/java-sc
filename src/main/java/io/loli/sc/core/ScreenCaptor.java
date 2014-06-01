@@ -70,7 +70,7 @@ public class ScreenCaptor {
             api = new DropboxAPI(config);
         } else if (apiStr.equals("gdrive")) {
             api = new GDriveAPI(config);
-        } else if (apiStr.equals("imgCloud")) {
+        } else if (apiStr.equals("screenshot.pics")) {
             api = new ImageCloudAPI(config);
         }
         return api;
