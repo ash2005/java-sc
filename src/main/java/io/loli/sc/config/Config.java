@@ -372,7 +372,7 @@ public class Config {
 
 	public String getFileNameFormat() {
 		if (fileNameFormat == null) {
-			fileNameFormat = FileNameGenerator.generate();
+			fileNameFormat = FileNameGenerator.getFormatString();
 		}
 		return fileNameFormat;
 	}
