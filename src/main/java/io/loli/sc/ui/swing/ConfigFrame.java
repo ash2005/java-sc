@@ -62,6 +62,7 @@ public class ConfigFrame extends JFrame {
         private JButton okButton = new JButton("确认");
         private Set<Integer> keyIntSet = new LinkedHashSet<Integer>();
         private String hotkeyStr;
+        private JButton cancelButton = new JButton("取消");
 
         public KeyListenPanel(JFrame parentComponent, String option) {
             super(parentComponent, true);
@@ -70,8 +71,10 @@ public class ConfigFrame extends JFrame {
             this.setLayout(null);
             this.add(infoLabel);
             this.add(okButton);
+            this.add(cancelButton);
             infoLabel.setBounds(40, 5, 160, 30);
-            okButton.setBounds(40, 40, 100, 30);
+            okButton.setBounds(40, 40, 50, 30);
+            cancelButton.setBounds(100 , 40,50,30);
             this.option = option;
             this.setSize(200, 110);
 
@@ -178,19 +181,20 @@ public class ConfigFrame extends JFrame {
                     lastReleaseKey = KeyEvent.getKeyText(e.getKeyCode());
                 }
             });
-            okButton.addActionListener(new ActionListener() {
+            okButton.addActionListener(e -> {
 
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (option.equals("select")) {
-                        config.setSelectHotKey(hotkeyStr);
-                        selectShotKeyShowLabel.setText(infoLabel.getText());
-                    } else {
-                        config.setFullHotKey(hotkeyStr);
-                        fullShotKeyShowLabel.setText(infoLabel.getText());
-                    }
-                    dispose();
+                if (option.equals("select")) {
+                    config.setSelectHotKey(hotkeyStr);
+                    selectShotKeyShowLabel.setText(infoLabel.getText());
+                } else {
+                    config.setFullHotKey(hotkeyStr);
+                    fullShotKeyShowLabel.setText(infoLabel.getText());
                 }
+                dispose();
+            });
+
+            cancelButton.addActionListener(e -> {
+                dispose();
             });
         }
     }
@@ -728,7 +732,7 @@ public class ConfigFrame extends JFrame {
                 try {
                     ImageCloudAPI api = new ImageCloudAPI();
                     api.auth();
-                    
+
                     ImageCloudAPI.ClientToken token = api.getToken();
                     if (token != null && token.getId() != 0) {
                         config.getImageCloudConfig().setToken(token.getToken());
