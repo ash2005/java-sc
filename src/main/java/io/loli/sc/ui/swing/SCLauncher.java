@@ -44,8 +44,11 @@ public class SCLauncher {
                     String s = df.getResult();
                     if (!df.isCanStop()) {
                         ScreenCaptor.copyToClipboard(s);
-                        new MP3Player().play(ClassLoader
-                                .getSystemResourceAsStream("message.mp3"));
+                        Config config = new Config();
+                        if (config.getPlayMusicAfterUpload()) {
+                            new MP3Player().play(ClassLoader
+                                    .getSystemResourceAsStream("message.mp3"));
+                        }
                         while (ifStrinClipboard(s)) {
                             try {
                                 Thread.sleep(2000);
@@ -72,8 +75,11 @@ public class SCLauncher {
                     ScreenCaptor sc = ScreenCaptor.newInstance();
                     String result = sc.getLink();
                     ScreenCaptor.copyToClipboard(result);
-                    new MP3Player().play(ClassLoader
-                            .getSystemResourceAsStream("message.mp3"));
+                    Config config = new Config();
+                    if (config.getPlayMusicAfterUpload()) {
+                        new MP3Player().play(ClassLoader
+                                .getSystemResourceAsStream("message.mp3"));
+                    }
                     while (ifStrinClipboard(result)) {
                         try {
                             Thread.sleep(2000);
