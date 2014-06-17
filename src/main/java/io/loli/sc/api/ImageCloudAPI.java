@@ -64,7 +64,12 @@ public class ImageCloudAPI extends APITools implements API {
             multiPartEntityBuilder
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             // 可以直接addBinary
-            multiPartEntityBuilder.addPart("image", new FileBody(fileToUpload));
+            multiPartEntityBuilder.addPart(
+                    "image",
+                    new FileBody(fileToUpload, ContentType.create(
+                            "application/octet-stream", Consts.UTF_8),
+                            fileToUpload.getName()));
+            multiPartEntityBuilder.setCharset(Consts.UTF_8);
             // 可以直接addText
             multiPartEntityBuilder.addPart("token", new StringBody(token,
                     ContentType.create("text/plain", Consts.UTF_8)));
